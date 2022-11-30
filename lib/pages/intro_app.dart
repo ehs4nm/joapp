@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'auth_app.dart';
+import 'auth_gate.dart';
 
 /// App widget class.
 class IntroApp extends StatelessWidget {
@@ -31,7 +31,7 @@ class IntroApp extends StatelessWidget {
             // so the user will not be able to slide back to the Intro Views.
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const AuthApp()),
+              MaterialPageRoute(builder: (_) => const AuthGate()),
             );
           },
           pageButtonTextStyles: const TextStyle(
