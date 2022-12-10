@@ -1,12 +1,14 @@
 class Child {
   int? id;
   String? name;
+  String? sex;
   int? balance;
   String? avatar;
 
   Child({
     this.id,
     this.name,
+    this.sex,
     this.balance,
     this.avatar,
   });
@@ -15,6 +17,7 @@ class Child {
     return {
       'id': id,
       'name': name,
+      'sex': sex,
       'balance': balance,
       'avatar': avatar,
     };
@@ -22,20 +25,18 @@ class Child {
 
   @override
   String toString() {
-    return 'Child{id: $id, name: $name, balance: $balance, avatar: $avatar}';
+    return 'Child{id: $id, name: $name, sex:$sex, balance: $balance, avatar: $avatar}';
   }
 }
 
 class Parent {
   int? id;
-  String? firstName;
-  String? lastName;
+  String? fullName;
   int? pin;
 
   Parent({
     this.id,
-    this.firstName,
-    this.lastName,
+    this.fullName,
     this.pin,
   });
 
@@ -44,8 +45,7 @@ class Parent {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'firstName': firstName,
-      'lastName': lastName,
+      'fullName': fullName,
       'pin': pin,
     };
   }
@@ -54,7 +54,7 @@ class Parent {
   // each Child when using the print statement.
   @override
   String toString() {
-    return 'Child{id: $id, firstName: $firstName, lastName: $lastName, pin: $pin}';
+    return 'Child{id: $id, fullName: $fullName, pin: $pin}';
   }
 }
 

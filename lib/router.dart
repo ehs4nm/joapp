@@ -5,7 +5,9 @@ import 'package:jojo/pages/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/auth_gate.dart';
+import 'pages/child.dart';
 import 'pages/intro_app.dart';
+import 'pages/splash.dart';
 
 shouldStartIntro() async {
   var prefs = await SharedPreferences.getInstance();
@@ -23,14 +25,37 @@ final GoRouter _router = GoRouter(
   routes: <RouteBase>[
     GoRoute(
       path: '/',
+      name: 'splash',
       builder: (BuildContext context, GoRouterState state) {
-        return const AuthApp();
+        return const SplashScreen();
       },
       routes: <RouteBase>[
+        GoRoute(
+          path: 'home',
+          name: 'home',
+          builder: (BuildContext context, GoRouterState state) {
+            return const HomePage();
+          },
+        ),
+        GoRoute(
+          path: 'auth',
+          builder: (BuildContext context, GoRouterState state) {
+            return const AuthApp();
+          },
+        ),
         GoRoute(
           path: 'settings',
           builder: (BuildContext context, GoRouterState state) {
             return const Settings();
+          },
+        ),
+        GoRoute(
+          path: 'child/:id',
+          name: 'child',
+          builder: (BuildContext context, GoRouterState state) {
+            return ChildPage(
+              id: state.params["id"]!,
+            );
           },
         ),
         GoRoute(
