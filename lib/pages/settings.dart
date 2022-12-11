@@ -2,7 +2,9 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:jojo/models/models.dart';
+import 'package:jojo/providers/children_provider.dart';
 import 'package:path/path.dart' as Path;
+import 'package:provider/provider.dart';
 // import 'package:path/path.dart';
 
 import '../models/database_handler.dart';
@@ -48,37 +50,37 @@ class SettingsState extends State<Settings> {
     parentFullNameController = TextEditingController();
     childController = TextEditingController();
 
-    databaseHandler
-        .children()
-        .then((value) => setState(() {
-              for (var element in value) {
-                children.add(Child(
-                  id: element.id,
-                  name: element.name,
-                  sex: element.sex,
-                  balance: element.balance,
-                  avatar: element.avatar,
-                ));
-              }
-            }))
-        .catchError((error) {
-      print(error);
-    });
+    // databaseHandler
+    //     .selectChildren()
+    //     .then((value) => setState(() {
+    //           for (var element in value) {
+    //             children.add(Child(
+    //               id: element.id,
+    //               name: element.name,
+    //               sex: element.sex,
+    //               balance: element.balance,
+    //               avatar: element.avatar,
+    //             ));
+    //           }
+    //         }))
+    //     .catchError((error) {
+    //   print(error);
+    // });
 
-    databaseHandler
-        .parents()
-        .then((value) => setState(() {
-              for (var element in value) {
-                parents.add(Parent(
-                  id: element.id,
-                  fullName: element.fullName,
-                  pin: element.pin,
-                ));
-              }
-            }))
-        .catchError((error) {
-      print(error);
-    });
+    // databaseHandler
+    //     .parents()
+    //     .then((value) => setState(() {
+    //           for (var element in value) {
+    //             parents.add(Parent(
+    //               id: element.id,
+    //               fullName: element.fullName,
+    //               pin: element.pin,
+    //             ));
+    //           }
+    //         }))
+    //     .catchError((error) {
+    //   print(error);
+    // });
   }
 
   @override
@@ -111,12 +113,11 @@ class SettingsState extends State<Settings> {
   void submitAddedChild(context, sex) {
     setState(() {
       children[0] = Child(
-          id: 1,
-          name: childController.text,
-          sex: sex,
-          balance: 0,
-          avatar: 'assets/bean_2.png');
-      databaseHandler.updateChild(children[0]);
+        id: 1,
+        name: childController.text,
+        balance: 0,
+      );
+      // databaseHandler.updateChild(children[0]);
     });
     Navigator.of(context).pop(childController.text);
   }
@@ -198,7 +199,7 @@ class SettingsState extends State<Settings> {
   void submitUpdateParentFullName(context) {
     setState(() {
       parents[0] = Parent(id: 1, fullName: parentFullNameController.text);
-      databaseHandler.updateParent(parents[0]);
+      // databaseHandler.updateParent(parents[0]);
     });
     Navigator.of(context).pop(parentFullNameController.text);
   }
@@ -206,7 +207,7 @@ class SettingsState extends State<Settings> {
   void submitUpdateChildName(context) {
     setState(() {
       parents[0] = Parent(id: 1, fullName: parentFullNameController.text);
-      databaseHandler.updateParent(parents[0]);
+      // databaseHandler.updateParent(parents[0]);
     });
     Navigator.of(context).pop(parentFullNameController.text);
   }
@@ -214,7 +215,7 @@ class SettingsState extends State<Settings> {
   void submitDeleteChild(context) {
     setState(() {
       parents[0] = Parent(id: 1, fullName: parentFullNameController.text);
-      databaseHandler.updateParent(parents[0]);
+      // databaseHandler.updateParent(parents[0]);
     });
     Navigator.of(context).pop(parentFullNameController.text);
   }
@@ -365,7 +366,7 @@ class SettingsState extends State<Settings> {
               validator: (value) {
                 value!.isEmpty ? 'Please fill this' : null;
               },
-              initialValue: children[index].name ?? '',
+              initialValue: children[index].name,
             ),
           ),
           Column(
@@ -387,8 +388,8 @@ class SettingsState extends State<Settings> {
                         ),
                         onPressed: () {
                           setState(() {
-                            databaseHandler.insertChild(children.last);
-                            children.add(Child());
+                            // databaseHandler.insertChild(children.last);
+                            // children.add(Child());
                           });
                         },
                       ),
@@ -430,108 +431,92 @@ class SettingsState extends State<Settings> {
   }
 
   Widget uiCrousel() {
-    return Column(
-      children: [
-        CarouselSlider(
-          carouselController: _controller,
-          options: CarouselOptions(
-              height: 300,
-              autoPlayInterval: const Duration(seconds: 5),
-              autoPlayAnimationDuration: const Duration(milliseconds: 800),
-              autoPlayCurve: Curves.fastOutSlowIn,
-              autoPlay: true,
-              aspectRatio: 2.0,
-              scrollDirection: Axis.horizontal,
-              enlargeCenterPage: true,
-              onPageChanged: (index, reason) {
-                setState(() {
-                  _current = index;
-                });
-              }),
-          items: children.map((i) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(horizontal: 1.0),
-                  decoration: const BoxDecoration(color: Colors.transparent),
-                  child: GestureDetector(
-                    onTap: () {
-                      openChildDialog(context);
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          '${i.avatar ?? (i.sex == "boy" ? "assets/boy.png" : "assets/girl.png")}',
-                          height: 150,
-                        ),
-                        Text(
-                          "${i.name ?? 'Alireza'}",
-                          style: const TextStyle(
-                            color: Colors.orange,
-                            fontFamily: 'airfool',
-                            fontSize: 30,
+    return Consumer<ChildrenProvider>(
+        builder: <ManageChildren>(context, provider, child) {
+      return Column(
+        children: [
+          CarouselSlider(
+            carouselController: _controller,
+            options: CarouselOptions(
+                height: 300,
+                autoPlayInterval: const Duration(seconds: 5),
+                autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                autoPlayCurve: Curves.fastOutSlowIn,
+                autoPlay: true,
+                aspectRatio: 2.0,
+                scrollDirection: Axis.horizontal,
+                enlargeCenterPage: true,
+                onPageChanged: (index, reason) {
+                  setState(() {
+                    _current = index;
+                  });
+                }),
+            items: provider.selectChildren.item<Widget>((i) {
+              return Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                    decoration: const BoxDecoration(color: Colors.transparent),
+                    child: GestureDetector(
+                      onTap: () {
+                        openChildDialog(context);
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            '${i.avatar ?? (i.sex == "boy" ? "assets/boy.png" : "assets/girl.png")}',
+                            height: 150,
                           ),
-                        ),
-
-                        // Text(
-                        //   "${i.balance ?? 0}\$",
-                        //   style: const TextStyle(
-                        //     color: Colors.black,
-                        //     fontFamily: 'airfool',
-                        //     fontSize: 30,
-                        //   ),
-                        // ),
-                        // Expanded(
-                        //   child: Padding(
-                        //     padding: const EdgeInsets.all(10.0),
-                        //     child: IconButton(
-                        //       icon: Image.asset('assets/button.png', height: 60),
-                        //       iconSize: 100,
-                        //       onPressed: () {},
-                        //     ),
-                        //   ),
-                        // ),
-                      ],
+                          Text(
+                            "${i.name ?? 'Alireza'}",
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontFamily: 'airfool',
+                              fontSize: 30,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        ),
-        // SingleChildScrollView(
-        //   scrollDirection: Axis.horizontal,
-        //   child: Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     children: children.asMap().entries.map((entry) {
-        //       return GestureDetector(
-        //         onTap: () => _controller.animateToPage(entry.key),
-        //         child: Container(
-        //           width: 10,
-        //           height: 10,
-        //           margin: const EdgeInsets.symmetric(
-        //               vertical: 8.0, horizontal: 4.0),
-        //           decoration: BoxDecoration(
-        //               boxShadow: const [
-        //                 BoxShadow(
-        //                   offset: Offset(1.0, 1.0),
-        //                   blurRadius: 10.0,
-        //                   color: Color.fromARGB(124, 136, 158, 148),
-        //                 ),
-        //               ],
-        //               shape: BoxShape.circle,
-        //               color: (Theme.of(context).brightness == Brightness.dark
-        //                       ? Colors.white
-        //                       : Colors.orange.shade800)
-        //                   .withOpacity(_current == entry.key ? 0.9 : 0.4)),
-        //         ),
-        //       );
-        //     }).toList(),
-        //   ),
-        // ),
-      ],
-    );
+                  );
+                },
+              );
+            }).toList(),
+          ),
+          // SingleChildScrollView(
+          //   scrollDirection: Axis.horizontal,
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //     children: children.asMap().entries.map((entry) {
+          //       return GestureDetector(
+          //         onTap: () => _controller.animateToPage(entry.key),
+          //         child: Container(
+          //           width: 10,
+          //           height: 10,
+          //           margin: const EdgeInsets.symmetric(
+          //               vertical: 8.0, horizontal: 4.0),
+          //           decoration: BoxDecoration(
+          //               boxShadow: const [
+          //                 BoxShadow(
+          //                   offset: Offset(1.0, 1.0),
+          //                   blurRadius: 10.0,
+          //                   color: Color.fromARGB(124, 136, 158, 148),
+          //                 ),
+          //               ],
+          //               shape: BoxShape.circle,
+          //               color: (Theme.of(context).brightness == Brightness.dark
+          //                       ? Colors.white
+          //                       : Colors.orange.shade800)
+          //                   .withOpacity(_current == entry.key ? 0.9 : 0.4)),
+          //         ),
+          //       );
+          //     }).toList(),
+          //   ),
+          // ),
+        ],
+      );
+    });
   }
 }

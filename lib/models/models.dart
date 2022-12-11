@@ -1,34 +1,3 @@
-class Child {
-  int? id;
-  String? name;
-  String? sex;
-  int? balance;
-  String? avatar;
-
-  Child({
-    this.id,
-    this.name,
-    this.sex,
-    this.balance,
-    this.avatar,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'sex': sex,
-      'balance': balance,
-      'avatar': avatar,
-    };
-  }
-
-  @override
-  String toString() {
-    return 'Child{id: $id, name: $name, sex:$sex, balance: $balance, avatar: $avatar}';
-  }
-}
-
 class Parent {
   int? id;
   String? fullName;

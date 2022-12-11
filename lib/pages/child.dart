@@ -12,7 +12,7 @@ class ChildPage extends StatefulWidget {
   State<ChildPage> createState() => _ChildPageState();
 }
 
-Child child = Child();
+// Child child = Child();
 late int count;
 
 final DatabaseHandler databaseHandler = DatabaseHandler();
@@ -47,15 +47,15 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
 
     animatePath = 'assets/animations/piggy-bank-dancing.json';
 
-    databaseHandler
-        .readChild(0)
-        .then((value) => setState(() {
-              child = value;
-            }))
-        .catchError((error) {
-      print(error);
-    });
-    super.initState();
+    // databaseHandler
+    //     .readChild(0)
+    //     .then((value) => setState(() {
+    //           child = value;
+    //         }))
+    //     .catchError((error) {
+    //   print(error);
+    // });
+    // super.initState();
   }
 
   @override
@@ -85,7 +85,7 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 80.0, 20, 10),
               child: Text(
-                "${child.name} has ${child.balance ?? 0}\$ now: ",
+                "sdfdfs", // "${child.name} has ${child.balance ?? 0}\$ now: ",
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   shadows: [

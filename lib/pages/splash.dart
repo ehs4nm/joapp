@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:jojo/pages/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
+
+import 'intro_app.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,9 +17,18 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _controller;
 
+  bool introIsWatched = false;
+
+  void loadIntroIsWatched() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    introIsWatched = prefs.getBool('introIsWatched') ?? false;
+  }
+
   @override
   void initState() {
     super.initState();
+    loadIntroIsWatched();
+    print('++++++++++++++++++ $introIsWatched');
 
     _controller = VideoPlayerController.asset(
       'assets/assets/bee.mp4',
@@ -34,7 +46,8 @@ class _SplashScreenState extends State<SplashScreen> {
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
+      MaterialPageRoute(
+          builder: (context) => introIsWatched ? const HomePage() : IntroApp()),
     );
   }
 
@@ -49,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.blue,
       body: Center(
-        child: _controller.value.isInitialized
+        child: !_controller.value.isInitialized
             ? AspectRatio(
                 aspectRatio: _controller.value.aspectRatio,
                 child: VideoPlayer(_controller),

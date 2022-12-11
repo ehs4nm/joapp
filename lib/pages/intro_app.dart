@@ -6,15 +6,21 @@ import 'auth_gate.dart';
 
 /// App widget class.
 class IntroApp extends StatelessWidget {
-  final SharedPreferences prefs;
-  final String boolKey;
+  IntroApp({
+    Key? key,
+  }) : super(key: key);
 
-  const IntroApp({Key? key, required this.prefs, required this.boolKey})
-      : super(key: key);
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+  void setIntroIsWatched() async {
+    final SharedPreferences prefs = await _prefs;
+    await prefs.setBool('introIsWatched', true).then((bool success) {
+      return true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    prefs.setBool(boolKey, false);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'IntroViews',
@@ -29,6 +35,8 @@ class IntroApp extends StatelessWidget {
           onTapDoneButton: () {
             // Use Navigator.pushReplacement if you want to dispose the latest route
             // so the user will not be able to slide back to the Intro Views.
+            setIntroIsWatched();
+            print('sdfd-------------');
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const AuthGate()),

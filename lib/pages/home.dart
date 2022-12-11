@@ -1,6 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jojo/providers/children_provider.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
 import '../models/database_handler.dart';
@@ -8,7 +10,7 @@ import '../models/models.dart';
 
 final CarouselController _controller = CarouselController();
 final DatabaseHandler databaseHandler = DatabaseHandler();
-List<Child> children = [];
+// List<Child> children = [];
 
 int _current = 0;
 
@@ -23,40 +25,48 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    databaseHandler
-        .children()
-        .then((value) => setState(() {
-              for (var element in value) {
-                children.add(Child(
-                  id: element.id,
-                  name: element.name,
-                  sex: element.sex,
-                  balance: element.balance,
-                  avatar: element.avatar,
-                ));
-              }
-            }))
-        .catchError((error) {
-      print(error);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Container(
-        constraints: const BoxConstraints.expand(),
-        child: Scaffold(
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-          floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-          floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-          floatingActionButton: FloatingActionButton(
-              onPressed: () => context.push('/settings'),
-              child: const Icon(Icons.settings)),
-          body: Padding(
-            padding: const EdgeInsets.only(top: 40),
-            child: _homeWidget(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => ChildrenProvider(),
+        ),
+      ],
+      builder: (context, child) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Container(
+          constraints: const BoxConstraints.expand(),
+          child: Scaffold(
+            backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+            floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+            floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+            floatingActionButton: FloatingActionButton(
+                onPressed: () => context.push('/settings'),
+                child: const Icon(Icons.settings)),
+            body: Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: FutureBuilder(
+                future: Provider.of<ChildrenProvider>(context, listen: false)
+                    .selectChildren(),
+                builder: (context, snapshot) =>
+                    snapshot.connectionState == ConnectionState.waiting
+                        ? const Center(child: CircularProgressIndicator())
+                        : Consumer<ChildrenProvider>(
+                            child: const Center(
+                              child: Text(
+                                'No products added',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            builder: (context, childrenProvider, child) =>
+                                childrenProvider.item.isEmpty
+                                    ? child!
+                                    : _homeWidget()),
+              ),
+            ),
           ),
         ),
       ),
@@ -66,11 +76,11 @@ class _HomePageState extends State<HomePage> {
   Widget _homeWidget() {
     return Stack(
       children: [
-        Image.asset(
-          'assets/forrest.png',
-          height: MediaQuery.of(context).size.height,
-          fit: BoxFit.cover,
-        ),
+        // Image.asset(
+        //   'assets/forrest.png',
+        //   height: MediaQuery.of(context).size.height,
+        //   fit: BoxFit.cover,
+        // ),
         Scaffold(
           backgroundColor: Colors.transparent,
           body: SingleChildScrollView(
@@ -119,81 +129,31 @@ class _HomePageState extends State<HomePage> {
                     'Please choose a Child ',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      // shadows: [
-                      //   Shadow(
-                      //     offset: Offset(3.0, 8.0),
-                      //     blurRadius: 25.0,
-                      //     color: Color.fromARGB(125, 0, 0, 255),
-                      //   ),
-                      // ],
                       fontFamily: 'airfool',
                       fontFamilyFallback: ['mrvampire'],
                       fontSize: 30,
                     ),
                   ),
-                  CarouselSlider(
-                    carouselController: _controller,
-                    options: CarouselOptions(
-                        height: 300,
-                        autoPlayInterval: const Duration(seconds: 5),
-                        autoPlayAnimationDuration:
-                            const Duration(milliseconds: 800),
-                        autoPlayCurve: Curves.fastOutSlowIn,
-                        autoPlay: true,
-                        aspectRatio: 2.0,
-                        scrollDirection: Axis.horizontal,
-                        enlargeCenterPage: true,
-                        onPageChanged: (index, reason) {
-                          setState(() {
-                            _current = index;
-                          });
-                        }),
-                    items: children.map((i) {
-                      return InkWell(
-                        onTap: () => context.pushNamed('child',
-                            params: {"id": i.id.toString()}),
-                        child: Builder(
-                          builder: (BuildContext context) {
-                            return Container(
-                              width: MediaQuery.of(context).size.width,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 1.0),
-                              decoration: const BoxDecoration(
-                                  color: Colors.transparent),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "${i.name ?? '-'}",
-                                        style: const TextStyle(
-                                          color: Colors.orange,
-                                          fontFamily: 'airfool',
-                                          fontSize: 30,
-                                        ),
-                                      ),
-                                      Image.asset(
-                                        '${i.avatar ?? (i.sex == "boy" ? "assets/boy.png" : "assets/girl.png")}',
-                                        height: 200,
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    "${i.balance ?? 0}\$",
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: 'airfool',
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                  Consumer<ChildrenProvider>(
+                    builder: (context, childrenProvider, child) =>
+                        ListView.builder(
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount: childrenProvider.item.length,
+                      itemBuilder: (context, index) => Dismissible(
+                        key: ValueKey(childrenProvider.item[index].id),
+                        child: MainBody(
+                          childrenProvider: childrenProvider,
+                          index: index,
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'No children added',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -201,6 +161,50 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class MainBody extends StatelessWidget {
+  const MainBody({
+    Key? key,
+    required this.childrenProvider,
+    required this.index,
+  }) : super(key: key);
+  final ChildrenProvider childrenProvider;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    var width = 300.0;
+    var height = 200.0;
+    var helper = childrenProvider.item[index];
+    return Container(
+      width: width,
+      height: height * 0.23,
+      padding: EdgeInsets.symmetric(horizontal: width * 0.02),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Text(
+            'Do you want to delete the ${helper.name}?',
+            maxLines: 2,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  child: const Text('Delete it'),
+                  onPressed: () async {
+                    childrenProvider.deleteChildById(helper.id);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
