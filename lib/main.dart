@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:jooj_bank/providers/children_provider.dart';
+import 'package:provider/provider.dart';
 
 import 'models/firebase_options.dart';
 import 'router.dart';
@@ -36,5 +38,14 @@ Future<void> main() async {
 
   // globalAuthenticator = await PinLock.baseAuthenticator('1');
 
-  runApp(const RouterApp());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (context) => ChildrenProvider(),
+      ),
+    ],
+
+    child: const RouterApp(),
+    // dispose: (context, DatabaseHandler db)=> db.close(),
+  ));
 }

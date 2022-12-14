@@ -1,5 +1,5 @@
-name: jojo
-description: A new Flutter project.
+name: jooj_bank
+description: Where you can have  bank for your children.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -78,6 +78,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/home/
     - assets/assets/
     - assets/animations/
     - assets/settings/
@@ -116,7 +117,21 @@ flutter:
     - family: mrvampire
       fonts:
         - asset: assets/Fonts/mrvampire.ttf
-
     - family: airfool
       fonts:
         - asset: assets/Fonts/airfool.ttf
+
+    - family: abdomaster
+      fonts:
+        - asset: assets/Fonts/abdomaster.ttf
+
+    - family: lapsus
+      fonts:
+        - asset: assets/Fonts/lapsus.otf
+    - family: luckiestguy
+      fonts:
+        - asset: assets/Fonts/luckiestguy.ttf
+
+    - family: waytosun
+      fonts:
+        - asset: assets/Fonts/waytosun.otf

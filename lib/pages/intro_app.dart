@@ -3,6 +3,7 @@ import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_gate.dart';
+import 'home_page.dart';
 
 /// App widget class.
 class IntroApp extends StatelessWidget {
@@ -36,10 +37,11 @@ class IntroApp extends StatelessWidget {
             // Use Navigator.pushReplacement if you want to dispose the latest route
             // so the user will not be able to slide back to the Intro Views.
             setIntroIsWatched();
-            print('sdfd-------------');
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const AuthGate()),
+              MaterialPageRoute(builder: (_) => const NewHomePage()),
+              // MaterialPageRoute(builder: (_) => const AuthGate()),
             );
           },
           pageButtonTextStyles: const TextStyle(

@@ -29,19 +29,12 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _plusController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
-    _deleteController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
-    _piggyInController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _piggyOutController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _piggyLaughingController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _piggyDancingController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 5))
-          ..animateTo(5);
+    _plusController = AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    _deleteController = AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    _piggyInController = AnimationController(vsync: this, duration: const Duration(seconds: 3));
+    _piggyOutController = AnimationController(vsync: this, duration: const Duration(seconds: 3));
+    _piggyLaughingController = AnimationController(vsync: this, duration: const Duration(seconds: 3));
+    _piggyDancingController = AnimationController(vsync: this, duration: const Duration(seconds: 5))..animateTo(5);
     count = 0;
     _controller = _piggyDancingController;
 
@@ -82,12 +75,12 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
         backgroundColor: Colors.transparent,
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80.0, 20, 10),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 80.0, 20, 10),
               child: Text(
                 "sdfdfs", // "${child.name} has ${child.balance ?? 0}\$ now: ",
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   shadows: [
                     Shadow(
                       offset: Offset(3.0, 8.0),
@@ -114,8 +107,7 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
                       onPressed: () {
                         setState(() {
                           count++;
-                          animatePath =
-                              'assets/animations/piggy-bank-coins-in.json';
+                          animatePath = 'assets/animations/piggy-bank-coins-in.json';
                           _controller = _piggyInController;
                         });
                         _piggyInController.reset();
@@ -150,8 +142,7 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
                       onPressed: () {
                         setState(() {
                           count--;
-                          animatePath =
-                              'assets/animations/piggy-bank-coins-out.json';
+                          animatePath = 'assets/animations/piggy-bank-coins-out.json';
                           _controller = _piggyOutController;
                         });
                         _piggyOutController.reset();
@@ -180,8 +171,7 @@ class _ChildPageState extends State<ChildPage> with TickerProviderStateMixin {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      animatePath =
-                          'assets/animations/piggy-bank-laughing.json';
+                      animatePath = 'assets/animations/piggy-bank-laughing.json';
                       _controller = _piggyLaughingController;
                       _controller.reset();
                       _controller.animateTo(1);

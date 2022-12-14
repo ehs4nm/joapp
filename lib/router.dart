@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jojo/pages/home.dart';
-import 'package:jojo/providers/children_provider.dart';
-import 'package:provider/provider.dart';
 
 import 'pages/auth_gate.dart';
-import 'pages/child.dart';
-import 'pages/intro_app.dart';
+import 'pages/home_page.dart';
+
 import 'pages/profile_page.dart';
+import 'pages/select_child_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/splash.dart';
 
@@ -24,10 +22,7 @@ final GoRouter _router = GoRouter(
           path: 'home',
           name: 'home',
           builder: (BuildContext context, GoRouterState state) {
-            return ChangeNotifierProvider(
-              create: (context) => ChildrenProvider(),
-              child: const HomePage(),
-            );
+            return const NewHomePage();
           },
         ),
         GoRoute(
@@ -39,10 +34,7 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: 'settings',
           builder: (BuildContext context, GoRouterState state) {
-            return ChangeNotifierProvider(
-              create: (context) => ChildrenProvider(),
-              child: const SettingsPage(),
-            );
+            return const SettingsPage();
           },
         ),
         // GoRoute(
@@ -57,7 +49,7 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: 'auth',
           builder: (BuildContext context, GoRouterState state) {
-            return const HomePage();
+            return const NewHomePage();
           },
         ),
 
@@ -71,28 +63,35 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: 'history',
           builder: (BuildContext context, GoRouterState state) {
-            return const HomePage();
+            return const SelectChildPage();
           },
         ),
 
         GoRoute(
           path: 'contact',
           builder: (BuildContext context, GoRouterState state) {
-            return const HomePage();
+            return const NewHomePage();
           },
         ),
 
         GoRoute(
           path: 'add-child',
           builder: (BuildContext context, GoRouterState state) {
-            return const HomePage();
+            return const NewHomePage();
+          },
+        ),
+
+        GoRoute(
+          path: 'select-child',
+          builder: (BuildContext context, GoRouterState state) {
+            return const SelectChildPage();
           },
         ),
 
         GoRoute(
           path: 'logout',
           builder: (BuildContext context, GoRouterState state) {
-            return const HomePage();
+            return const NewHomePage();
           },
         ),
 

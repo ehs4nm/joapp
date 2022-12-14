@@ -1,12 +1,12 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jojo/providers/children_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
 import '../models/database_handler.dart';
 import '../models/models.dart';
+import '../providers/children_provider.dart';
 
 final CarouselController _controller = CarouselController();
 final DatabaseHandler databaseHandler = DatabaseHandler();

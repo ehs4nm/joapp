@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:jojo/pages/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
+import 'auth_gate.dart';
+import 'home_page.dart';
 import 'intro_app.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -28,10 +29,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     loadIntroIsWatched();
-    print('++++++++++++++++++ $introIsWatched');
 
     _controller = VideoPlayerController.asset(
-      'assets/assets/bee.mp4',
+      'assets/splash.mp4',
     )
       ..initialize().then((_) {
         setState(() {});
@@ -46,8 +46,8 @@ class _SplashScreenState extends State<SplashScreen> {
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) => introIsWatched ? const HomePage() : IntroApp()),
+      MaterialPageRoute(builder: (context) => const NewHomePage()),
+      // introIsWatched ? const NewHomePage() : const AuthApp()),
     );
   }
 
@@ -60,11 +60,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue,
-      body: Center(
-        child: !_controller.value.isInitialized
+      backgroundColor: Colors.transparent,
+      body: LayoutBuilder(
+        builder: (context, constraints) => _controller.value.isInitialized
             ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
+                aspectRatio: constraints.maxWidth / constraints.maxHeight,
                 child: VideoPlayer(_controller),
               )
             : Container(),

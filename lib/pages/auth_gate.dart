@@ -9,6 +9,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'home_page.dart';
+
 typedef OAuthSignIn = void Function();
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -533,7 +535,7 @@ class AuthApp extends StatelessWidget {
                     stream: FirebaseAuth.instance.authStateChanges(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return const HomePage();
+                        return const NewHomePage();
                       }
                       return const AuthGate();
                     },

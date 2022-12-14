@@ -1,8 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:jojo/models/models.dart';
-import 'package:jojo/providers/children_provider.dart';
+import '../models/models.dart';
+import '../providers/children_provider.dart';
 import 'package:path/path.dart' as Path;
 import 'package:provider/provider.dart';
 // import 'package:path/path.dart';

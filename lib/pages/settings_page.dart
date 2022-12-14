@@ -2,22 +2,53 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jooj_bank/models/database_handler.dart';
+import 'package:jooj_bank/providers/children_provider.dart';
+import 'package:provider/provider.dart';
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+import '../providers/children_provider.dart';
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({Key? key}) : super(key: key);
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final _key = GlobalKey<FormState>();
+  late TextEditingController newChildController;
+
+  @override
+  void initState() {
+    super.initState();
+    newChildController = TextEditingController();
+    // childController = TextEditingController();
+  }
+
+  // @override
+  // void dispose() {
+  //   newChildController.dispose();
+  //   // childController.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
+
     return Stack(
       alignment: Alignment.center,
       children: [
         Image.asset(
           'assets/settings/bg-main.png',
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
+          height: height,
+          width: width,
           fit: BoxFit.cover,
         ),
         Scaffold(
+          // resizeToAvoidBottomInset: false,
           backgroundColor: Colors.transparent,
           body: SingleChildScrollView(
             child: Stack(
@@ -32,8 +63,8 @@ class SettingsPage extends StatelessWidget {
                       ),
                       Image.asset(
                         'assets/settings/bg-settings.png',
-                        height: MediaQuery.of(context).size.height * 0.7,
-                        // width: MediaQuery.of(context).size.width * 0.7,
+                        height: height * 0.7,
+                        // width: width * 0.7,
                         fit: BoxFit.cover,
                       ),
                     ],
@@ -88,8 +119,8 @@ class SettingsPage extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            context.push('/add-child');
-                            print('add-child');
+                            Navigator.of(context).pop();
+                            openAddChild(context);
                           }, // needed
                           child: Image.asset(
                             "assets/settings/btn-add-child-settings.png",
@@ -106,7 +137,7 @@ class SettingsPage extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            context.push('/intro');
+                            context.push('/contact');
                             print('contact');
                           }, // needed
                           child: Image.asset(
@@ -138,10 +169,7 @@ class SettingsPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(24),
                                 ),
                                 margin: EdgeInsets.only(
-                                    bottom: MediaQuery.of(context).size.height -
-                                        100,
-                                    right: 20,
-                                    left: 20),
+                                    bottom: height - 100, right: 20, left: 20),
                               ));
                             }
 
@@ -165,7 +193,7 @@ class SettingsPage extends StatelessWidget {
                     enableFeedback: false,
                     splashColor: Colors.transparent,
                     onTap: () {
-                      Navigator.of(context).pop();
+                      // Navigator.of(context).pop();
                       print('home');
                     }, // needed
                     child: const SizedBox(
@@ -179,6 +207,86 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Future openAddChild(context) {
+    final childrenProvider =
+        Provider.of<ChildrenProvider>(context, listen: false);
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        alignment: Alignment.topCenter,
+        backgroundColor: Colors.transparent,
+        child: SizedBox(
+          height: 300,
+          width: 500,
+          child: Form(
+            key: _key,
+            child: Stack(children: [
+              Image.asset(
+                'assets/home/bg-add-child.png',
+                height: 300,
+              ),
+              Center(
+                child: Positioned(
+                  bottom: 0,
+                  left: 0,
+                  width: 200,
+                  child: SizedBox(
+                    width: 160,
+                    child: TextField(
+                      style: const TextStyle(
+                        fontFamily: 'waytosun',
+                      ),
+                      decoration: const InputDecoration(
+                        hintStyle: TextStyle(
+                          fontFamily: 'waytosun',
+                        ),
+                        labelStyle: TextStyle(
+                          fontFamily: 'waytosun',
+                        ),
+                        border: InputBorder.none,
+                        hintText: 'Enter Your child name',
+                      ),
+                      controller: newChildController,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 55,
+                left: 45,
+                width: 250,
+                child: SizedBox(
+                  width: 250,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: TextButton.icon(
+                      label: const Text(''),
+                      // iconSize: 130,
+                      // splashColor: Colors.transparent,
+                      onPressed: () {
+                        print('object');
+                        childrenProvider.insertDatabase(
+                            newChildController.text, 0);
+
+                        // newChildController.clear();
+
+                        Navigator.of(context).pop();
+                      },
+                      icon: Image.asset(
+                        'assets/home/btn-add.png',
+                        height: 50,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 }
