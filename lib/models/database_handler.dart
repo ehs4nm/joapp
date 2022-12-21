@@ -1,8 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'models.dart';
-
 class DatabaseHandler {
   static const children = 'children';
   static Future<Database> database() async {
@@ -16,7 +14,7 @@ class DatabaseHandler {
       'DROP TABLE IF EXISTS children;',
       'DROP TABLE IF EXISTS transactions;',
       'CREATE TABLE IF NOT EXISTS parents (id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT NULL, pin INTEGER NULL );',
-      'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, sex TEXT NULL, balance INTEGER NULL, avatar TEXT NULL ); ',
+      'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, sex TEXT NULL, balance INTEGER NULL, note TEXT NULL, rfid TEXT NULL ); ',
       // '''CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, transaction INTEGER NULL, createdAt DATETIME
       //       FOREIGN KEY (childId) REFERENCES children (id) ON DELETE NO ACTION ON UPDATE NO ACTION );''',
     ];
@@ -47,6 +45,13 @@ class DatabaseHandler {
       // },
       version: 1,
     );
+  }
+
+  // insert data
+  static Future update(String table, Map<String, Object> data, String columnId, String id) async {
+    final db = await DatabaseHandler.database();
+
+    return db.update(table, data, where: "$columnId = ?", whereArgs: [id], conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // insert data
@@ -87,7 +92,7 @@ class DatabaseHandler {
     return db.rawDelete('DELETE FROM $table');
   }
 
-  //show items by id
+  //show item by id
   static Future selectChildById(String id) async {
     final db = await DatabaseHandler.database();
     return await db.rawQuery(

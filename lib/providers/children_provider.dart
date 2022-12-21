@@ -32,14 +32,8 @@ class ChildrenProvider with ChangeNotifier {
 
   List<Child> get item => _item;
 
-  Future insertDatabase(
-    String childName,
-    int childBalance,
-  ) async {
-    final newChild = Child(
-      name: childName,
-      balance: childBalance,
-    );
+  Future insertDatabase(String childName, int childBalance) async {
+    final newChild = Child(name: childName, balance: childBalance);
     _item.add(newChild);
 
     await DatabaseHandler.insert(DatabaseHandler.children, {
@@ -57,7 +51,7 @@ class ChildrenProvider with ChangeNotifier {
         .map((item) => Child(
               id: item['id'],
               name: item['name'] ?? '',
-              balance: item['balance'] ?? 0,
+              balance: item['balance'],
             ))
         .toList();
     notifyListeners();
@@ -75,13 +69,14 @@ class ChildrenProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateChildNameById(id, String childName) async {
+  Future<void> updateChildNameByName(String childName, String balance, String note) async {
     final db = await DatabaseHandler.database();
     await db.update(
       DatabaseHandler.children,
-      {'name': childName},
-      where: "id = ?",
-      whereArgs: [id],
+      {'name': childName, 'balance': balance},
+      // {'name': childName, 'balance': balance, 'note': note},
+      where: "name = ?",
+      whereArgs: [childName],
     );
     notifyListeners();
   }

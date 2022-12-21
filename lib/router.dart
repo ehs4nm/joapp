@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jooj_bank/pages/login_page.dart';
 
-import 'pages/auth_gate.dart';
+import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 
 import 'pages/profile_page.dart';
@@ -26,9 +27,15 @@ final GoRouter _router = GoRouter(
           },
         ),
         GoRoute(
-          path: 'auth',
+          path: 'register',
           builder: (BuildContext context, GoRouterState state) {
-            return const AuthApp();
+            return const RegisterPage();
+          },
+        ),
+        GoRoute(
+          path: 'login',
+          builder: (BuildContext context, GoRouterState state) {
+            return const LoginPage();
           },
         ),
         GoRoute(

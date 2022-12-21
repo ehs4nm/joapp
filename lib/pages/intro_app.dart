@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intro_views_flutter/intro_views_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'auth_gate.dart';
 import 'home_page.dart';
 
 /// App widget class.

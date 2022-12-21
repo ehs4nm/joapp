@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import '../models/database_handler.dart';
-import '../models/models.dart';
 
 class ChildPage extends StatefulWidget {
   final String id;

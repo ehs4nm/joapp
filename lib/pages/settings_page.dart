@@ -1,12 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/providers/children_provider.dart';
 import 'package:provider/provider.dart';
-
-import '../providers/children_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -155,21 +150,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            final GoogleSignIn googleSignIn = GoogleSignIn();
-
                             try {
-                              googleSignIn.signOut();
-                              FirebaseAuth.instance.signOut();
+                              //logout
                             } catch (e) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: const Text('Snackbar message'),
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(24),
                                 ),
-                                margin: EdgeInsets.only(
-                                    bottom: height - 100, right: 20, left: 20),
+                                margin: EdgeInsets.only(bottom: height - 100, right: 20, left: 20),
                               ));
                             }
 
@@ -211,8 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future openAddChild(context) {
-    final childrenProvider =
-        Provider.of<ChildrenProvider>(context, listen: false);
+    final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
     return showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -228,11 +217,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 'assets/home/bg-add-child.png',
                 height: 300,
               ),
-              Center(
-                child: Positioned(
-                  bottom: 0,
-                  left: 0,
-                  width: 200,
+              Positioned(
+                bottom: 0,
+                left: 0,
+                width: 200,
+                child: Center(
                   child: SizedBox(
                     width: 160,
                     child: TextField(
@@ -268,8 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       // splashColor: Colors.transparent,
                       onPressed: () {
                         print('object');
-                        childrenProvider.insertDatabase(
-                            newChildController.text, 0);
+                        childrenProvider.insertDatabase(newChildController.text, 0);
 
                         // newChildController.clear();
 
