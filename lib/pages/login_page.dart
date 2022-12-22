@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -27,11 +29,7 @@ class _LoginPageState extends State<LoginPage> {
 
       Map responseMap = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) => const NewHomePage(),
-            ));
+        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
       } else {
         errorSnackBar(context, responseMap.values.first);
       }
@@ -47,21 +45,13 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.black,
           centerTitle: true,
           elevation: 0,
-          title: const Text(
-            'Login',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          title: const Text('Login', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               TextField(
                 decoration: const InputDecoration(
                   hintText: 'Enter your email',
@@ -70,9 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                   _email = value;
                 },
               ),
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
               TextField(
                 obscureText: true,
                 decoration: const InputDecoration(
@@ -82,13 +70,8 @@ class _LoginPageState extends State<LoginPage> {
                   _password = value;
                 },
               ),
-              const SizedBox(
-                height: 30,
-              ),
-              MaterialButton(
-                child: const Text('LOG IN'),
-                onPressed: () => loginPressed(),
-              )
+              const SizedBox(height: 30),
+              MaterialButton(child: const Text('LOG IN'), onPressed: () => loginPressed())
             ],
           ),
         ));

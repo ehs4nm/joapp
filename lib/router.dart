@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/pages/login_page.dart';
+import 'package:jooj_bank/pages/pin_page.dart';
+import 'package:jooj_bank/pages/set_pin_page.dart';
 
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
@@ -102,12 +104,19 @@ final GoRouter _router = GoRouter(
           },
         ),
 
-        // GoRoute(
-        //   path: 'intro',
-        //   builder: (BuildContext context, GoRouterState state) {
-        //     return const IntroApp();
-        //   },
-        // ),
+        GoRoute(
+          path: 'pin',
+          builder: (BuildContext context, GoRouterState state) {
+            return const PinPage();
+          },
+        ),
+
+        GoRoute(
+          path: 'set-pin',
+          builder: (BuildContext context, GoRouterState state) {
+            return const SetPinPage();
+          },
+        ),
       ],
     ),
   ],

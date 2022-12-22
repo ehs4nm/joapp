@@ -29,8 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
-    print('token');
-    print(token);
     if (token != null) {
       setState(() {
         isAuth = true;
@@ -43,9 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     loadIntroIsWatched();
     _checkIfLoggedIn();
-    _controller = VideoPlayerController.asset(
-      'assets/splash.mp4',
-    )
+    _controller = VideoPlayerController.asset('assets/splash.mp4')
       ..initialize().then((_) {
         setState(() {});
       })

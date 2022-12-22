@@ -39,11 +39,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   @override
   void initState() {
+    super.initState();
     spendController = TextEditingController();
     addSavingController = TextEditingController();
     noteController = TextEditingController();
 
-    super.initState();
     newChildController = TextEditingController();
     _coinRainController = AnimationController(vsync: this, duration: const Duration(seconds: 4))..animateTo(4);
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))
@@ -68,7 +68,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     // var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     return WillPopScope(
-      onWillPop: () => _onWillPop(),
+      onWillPop: () async => false,
+      // onWillPop: () => _onWillPop(),
       child: mainHomeWidget(context, height),
     );
   }
@@ -213,17 +214,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               openProfile(context);
                               print('profile');
                             }, // needed
-                            child: Image.asset(
-                              "assets/settings/btn-profile-settings.png",
-                              width: 170,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.asset("assets/settings/btn-profile-settings.png", width: 170, fit: BoxFit.cover),
                           ),
                         ),
-                        const SizedBox(
-                          height: 20,
-                          width: 200,
-                        ),
+                        const SizedBox(height: 20, width: 200),
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
@@ -238,10 +232,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 20,
-                          width: 200,
-                        ),
+                        const SizedBox(height: 20, width: 200),
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
@@ -249,17 +240,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               Navigator.of(context).pop();
                               openAddChild(context);
                             }, // needed
-                            child: Image.asset(
-                              "assets/settings/btn-add-child-settings.png",
-                              width: 170,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.asset("assets/settings/btn-add-child-settings.png", width: 170, fit: BoxFit.cover),
                           ),
                         ),
-                        const SizedBox(
-                          height: 20,
-                          width: 200,
-                        ),
+                        const SizedBox(height: 20, width: 200),
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
@@ -267,22 +251,16 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               context.push('/contact');
                               print('contact');
                             }, // needed
-                            child: Image.asset(
-                              "assets/settings/btn-contact-settings.png",
-                              width: 170,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.asset("assets/settings/btn-contact-settings.png", width: 170, fit: BoxFit.cover),
                           ),
                         ),
-                        const SizedBox(
-                          height: 20,
-                          width: 200,
-                        ),
+                        const SizedBox(height: 20, width: 200),
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
                               try {
+                                context.push('/pin');
                                 //logout
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -298,11 +276,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               print('logout');
                               Navigator.of(context).pop();
                             }, // needed
-                            child: Image.asset(
-                              "assets/settings/btn-logout-settings.png",
-                              width: 170,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.asset("assets/settings/btn-logout-settings.png", width: 170, fit: BoxFit.cover),
                           ),
                         ),
                       ],
@@ -318,10 +292,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         // Navigator.of(context).pop();
                         print('home');
                       }, // needed
-                      child: const SizedBox(
-                        width: 160.0,
-                        height: 160.0,
-                      ),
+                      child: const SizedBox(width: 160.0, height: 160.0),
                     ),
                   ),
                 ]),
@@ -355,17 +326,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/profile');
                                 print('profile');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-parent-firstname.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-parent-firstname.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -373,17 +337,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/history');
                                 print('history');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-parent-lastname.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-parent-lastname.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -391,17 +348,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/add-child');
                                 print('add-child');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-child-name-1.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-child-name-1.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -409,17 +359,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/contact');
                                 print('contact');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-child-name-2.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-child-name-2.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -427,17 +370,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/contact');
                                 print('contact');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-email.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-email.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -445,35 +381,21 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 context.push('/contact');
                                 print('contact');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-password.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-password.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: () {
-                                context.push('/contact');
-                                print('contact');
+                                context.push('/set-pin');
+                                print('set-pin');
                               }, // needed
-                              child: Image.asset(
-                                "assets/settings/btn-four-digit.png",
-                                width: 170,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.asset("assets/settings/btn-four-digit.png", width: 170, fit: BoxFit.cover),
                             ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                            width: 200,
-                          ),
+                          const SizedBox(height: 10, width: 200),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -504,10 +426,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                           Navigator.of(context).pop();
                           print('home');
                         }, // needed
-                        child: const SizedBox(
-                          width: 100.0,
-                          height: 100.0,
-                        ),
+                        child: const SizedBox(width: 100.0, height: 100.0),
                       ),
                     ),
                   ]);
@@ -609,10 +528,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
           child: Form(
             key: _key,
             child: Stack(children: [
-              Image.asset(
-                'assets/home/bg-add-child.png',
-                height: 300,
-              ),
+              Image.asset('assets/home/bg-add-child.png', height: 300),
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -621,19 +537,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   child: SizedBox(
                     width: 160,
                     child: TextField(
-                      style: const TextStyle(
-                        fontFamily: 'waytosun',
-                      ),
+                      style: const TextStyle(fontFamily: 'waytosun'),
                       decoration: const InputDecoration(
-                        hintStyle: TextStyle(
-                          fontFamily: 'waytosun',
-                        ),
-                        labelStyle: TextStyle(
-                          fontFamily: 'waytosun',
-                        ),
-                        border: InputBorder.none,
-                        hintText: 'Enter Your child name',
-                      ),
+                          hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Enter Your child name'),
                       controller: newChildController,
                     ),
                   ),
@@ -659,10 +565,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
                         Navigator.of(context).pop();
                       },
-                      icon: Image.asset(
-                        'assets/home/btn-add.png',
-                        height: 50,
-                      ),
+                      icon: Image.asset('assets/home/btn-add.png', height: 50),
                     ),
                   ),
                 ),
@@ -876,16 +779,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
           title: const Text('Your child name', textAlign: TextAlign.center),
           content: const TextField(
             autofocus: true,
-            decoration: InputDecoration(
-              hintText: 'Enter Your child name please',
-            ),
+            decoration: InputDecoration(hintText: 'Enter Your child name please'),
             // controller: childController,
           ),
           actions: [
-            TextButton(
-              onPressed: () => (context),
-              child: const Text('Submit'),
-            ),
+            TextButton(onPressed: () => (context), child: const Text('Submit')),
           ],
         ),
       );
@@ -907,38 +805,38 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     });
   }
 
-  Future<bool> _onWillPop() async {
-    return (await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Are you sure?'),
-            content: const Text('Do you want to exit the App'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false), //<-- SEE HERE
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                    //< this
-                    PageRouteBuilder(
-                      transitionDuration: const Duration(milliseconds: 1000),
-                      pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
-                        return const NewHomePage();
-                      },
-                    ),
-                  );
-                  // SystemNavigator.pop();
-                  // Navigator.of(context).pop(true); // <-- SEE HERE
-                }, // <-- SEE HERE
-                child: const Text('Yes'),
-              ),
-            ],
-          ),
-        )) ??
-        false;
-  }
+  // Future<bool> _onWillPop() async {
+  //   return (await showDialog(
+  //         context: context,
+  //         builder: (context) => AlertDialog(
+  //           title: const Text('Are you sure?'),
+  //           content: const Text('Do you want to exit the App'),
+  //           actions: <Widget>[
+  //             TextButton(
+  //               onPressed: () => Navigator.of(context).pop(false), //<-- SEE HERE
+  //               child: const Text('No'),
+  //             ),
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pushReplacement(
+  //                   //< this
+  //                   PageRouteBuilder(
+  //                     transitionDuration: const Duration(milliseconds: 1000),
+  //                     pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+  //                       return const NewHomePage();
+  //                     },
+  //                   ),
+  //                 );
+  //                 // SystemNavigator.pop();
+  //                 // Navigator.of(context).pop(true); // <-- SEE HERE
+  //               }, // <-- SEE HERE
+  //               child: const Text('Yes'),
+  //             ),
+  //           ],
+  //         ),
+  //       )) ??
+  //       false;
+  // }
 }
 
 class PositionedCancelBtn extends StatelessWidget {
