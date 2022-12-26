@@ -37,7 +37,7 @@ class _PinPageState extends State<PinPage> {
           children: [
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                padding: const EdgeInsets.fromLTRB(10.0, 40.0, 10.0, 20.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -79,7 +79,9 @@ class _PinPageState extends State<PinPage> {
                     // margin: const EdgeInsets.only(bottom: 50, right: 30, left: 30),
                   ));
                 },
-                onBiometric: () {},
+                onBiometric: () {
+                  print(pinCode);
+                },
               ),
             ),
             Padding(

@@ -7,34 +7,33 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-class WaitingRfidAddPage extends StatefulWidget {
+class WaitingRfidSpendPage extends StatefulWidget {
   final bool muted;
 
-  WaitingRfidAddPage({super.key, required this.muted});
+  WaitingRfidSpendPage({super.key, required this.muted});
   @override
-  State<WaitingRfidAddPage> createState() => _WaitingRfidAddPageState();
+  State<WaitingRfidSpendPage> createState() => _WaitingRfidSpendPageState();
 }
 
-class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
-  // bool muted = false;
-
-  late VideoPlayerController _addController;
+class _WaitingRfidSpendPageState extends State<WaitingRfidSpendPage> {
+  late VideoPlayerController _spendController;
   @override
   void initState() {
     super.initState();
-    _addController = VideoPlayerController.asset('assets/countdown/count-add.mp4')
+
+    _spendController = VideoPlayerController.asset('assets/countdown/count-spend.mp4')
       ..initialize().then((_) {
         setState(() {});
       })
       ..setVolume(widget.muted ? 0.0 : 1.0);
+
     _playVideo();
   }
 
   void _playVideo() async {
     String rfidRead = 'a';
-    // loadMute();
-    _addController.setVolume(widget.muted ? 0.0 : 1.0);
-    _addController.play();
+    _spendController.setVolume(widget.muted ? 0.0 : 1.0);
+    _spendController.play();
     await Future.delayed(const Duration(seconds: 1));
     Navigator.of(context).pop(rfidRead);
   }
@@ -48,7 +47,7 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
 
   @override
   void dispose() {
-    _addController.dispose();
+    _spendController.dispose();
     super.dispose();
   }
 
@@ -58,7 +57,7 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
       backgroundColor: Colors.transparent,
       body: LayoutBuilder(
         builder: (context, constraints) =>
-            _addController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_addController)) : Container(),
+            _spendController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_spendController)) : Container(),
       ),
     );
   }
