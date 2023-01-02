@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jooj_bank/pages/contact_page.dart';
 import 'package:jooj_bank/pages/login_page.dart';
 import 'package:jooj_bank/pages/pin_page.dart';
 import 'package:jooj_bank/pages/set_pin_page.dart';
@@ -7,9 +8,6 @@ import 'package:jooj_bank/pages/set_pin_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
 
-import 'pages/profile_page.dart';
-import 'pages/select_child_page.dart';
-import 'pages/settings_page.dart';
 import 'pages/splash.dart';
 
 final GoRouter _router = GoRouter(
@@ -41,80 +39,21 @@ final GoRouter _router = GoRouter(
           },
         ),
         GoRoute(
-          path: 'settings',
-          builder: (BuildContext context, GoRouterState state) {
-            return const SettingsPage();
-          },
-        ),
-        // GoRoute(
-        //   path: 'child/:id',
-        //   name: 'child',
-        //   builder: (BuildContext context, GoRouterState state) {
-        //     return ChildPage(
-        //       id: state.params["id"]!,
-        //     );
-        //   },
-        // ),
-        GoRoute(
-          path: 'auth',
-          builder: (BuildContext context, GoRouterState state) {
-            return const NewHomePage();
-          },
-        ),
-
-        GoRoute(
-          path: 'profile',
-          builder: (BuildContext context, GoRouterState state) {
-            return const ProfilePage();
-          },
-        ),
-
-        GoRoute(
-          path: 'history',
-          builder: (BuildContext context, GoRouterState state) {
-            return const SelectChildPage();
-          },
-        ),
-
-        GoRoute(
-          path: 'contact',
-          builder: (BuildContext context, GoRouterState state) {
-            return const NewHomePage();
-          },
-        ),
-
-        GoRoute(
-          path: 'add-child',
-          builder: (BuildContext context, GoRouterState state) {
-            return const NewHomePage();
-          },
-        ),
-
-        GoRoute(
-          path: 'select-child',
-          builder: (BuildContext context, GoRouterState state) {
-            return const SelectChildPage();
-          },
-        ),
-
-        GoRoute(
-          path: 'logout',
-          builder: (BuildContext context, GoRouterState state) {
-            return const NewHomePage();
-          },
-        ),
-
-        GoRoute(
           path: 'pin',
           builder: (BuildContext context, GoRouterState state) {
             return const PinPage();
           },
         ),
-
         GoRoute(
           path: 'set-pin',
           builder: (BuildContext context, GoRouterState state) {
             return const SetPinPage();
+          },
+        ),
+        GoRoute(
+          path: 'contact',
+          builder: (BuildContext context, GoRouterState state) {
+            return const ContactPage();
           },
         ),
       ],

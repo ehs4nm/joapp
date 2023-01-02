@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:jooj_bank/pages/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
-import 'register_page.dart';
 import 'home_page.dart';
 import 'intro_app.dart';
 
@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => introIsWatched ? (isAuth ? const NewHomePage() : const RegisterPage()) : IntroApp()),
+      MaterialPageRoute(builder: (context) => introIsWatched ? (isAuth ? const NewHomePage() : const LoginPage()) : IntroApp()),
     );
   }
 

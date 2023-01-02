@@ -1,3 +1,5 @@
+import 'package:jooj_bank/models/models.dart';
+import 'package:jooj_bank/providers/children_provider.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -12,9 +14,13 @@ class DatabaseHandler {
     const initScript = [
       'DROP TABLE IF EXISTS parents;',
       'DROP TABLE IF EXISTS children;',
-      'DROP TABLE IF EXISTS transactions;',
-      'CREATE TABLE IF NOT EXISTS parents (id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT NULL, pin INTEGER NULL );',
-      'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, sex TEXT NULL, balance INTEGER NULL, note TEXT NULL, rfid TEXT NULL ); ',
+      'DROP TABLE IF EXISTS actions;',
+      'CREATE TABLE IF NOT EXISTS parents (id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT NULL,email TEXT NULL, pin TEXT NULL );',
+      'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, balance INTEGER NULL, rfid TEXT NULL ); ',
+      'CREATE TABLE IF NOT EXISTS actions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, value INTEGER NULL, note TEXT NULL, createdAt TEXT NULL); ',
+      'INSERT INTO parents (fullName, email, pin) VALUES("Parent Name", "Email Address","1234");',
+      'INSERT INTO children (name, balance, rfid) VALUES("CHild name", 0,"1234");',
+      'INSERT INTO actions (childId, value,note, createdAt) VALUES(1, 0,"note",datetime("now"));',
       // '''CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, transaction INTEGER NULL, createdAt DATETIME
       //       FOREIGN KEY (childId) REFERENCES children (id) ON DELETE NO ACTION ON UPDATE NO ACTION );''',
     ];
@@ -63,7 +69,7 @@ class DatabaseHandler {
   //show all items
   static Future<List<Map<String, dynamic>>> selectAll(
     String table,
-    order,
+    String order,
   ) async {
     final db = await DatabaseHandler.database();
     return db.query(
@@ -101,10 +107,57 @@ class DatabaseHandler {
     );
   }
 
+  static Future<List<Parent>> selectParent() async {
+    final db = await DatabaseHandler.database();
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      "SELECT * from parents ORDER BY id ASC LIMIT 1",
+    );
+    return List.generate(maps.length, (i) {
+      return Parent(
+        id: maps[i]['id'],
+        fullName: maps[i]['fullName'],
+        email: maps[i]['email'],
+        pin: maps[i]['pin'],
+      );
+    });
+  }
+
+  static Future<List<Child>> selectChild() async {
+    final db = await DatabaseHandler.database();
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      "SELECT * from children ORDER BY id ASC LIMIT 1",
+    );
+    return List.generate(maps.length, (i) {
+      return Child(
+        id: maps[i]['id'],
+        name: maps[i]['name'],
+        balance: maps[i]['balance'],
+      );
+    });
+  }
+
   //show items
   static Future<List<Map<String, dynamic>>> selectChildren() async {
     final db = await DatabaseHandler.database();
     var select = await db.query(DatabaseHandler.children);
     return select;
+  }
+
+  static Future<List<Map<String, dynamic>>> selectActionByChildId(String id) async {
+    final db = await DatabaseHandler.database();
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      "SELECT * from actions where childId = ? ORDER BY id DESC",
+      [id],
+    );
+    return maps;
+
+    // return List.generate(maps.length, (i) {
+    //   return BankAction(
+    //     id: maps[i]['id'],
+    //     childId: maps[i]['childId'],
+    //     action: maps[i]['action'],
+    //     createdAt: maps[i]['createdAt'],
+    //   );
+    // });
   }
 }

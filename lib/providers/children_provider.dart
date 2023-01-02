@@ -58,7 +58,7 @@ class ChildrenProvider with ChangeNotifier {
   }
 
   Future<void> deleteChildById(pickId) async {
-    await DatabaseHandler.deleteById(DatabaseHandler.children, 'id', pickId);
+    await DatabaseHandler.deleteById(DatabaseHandler.children, 'id', pickId.toString());
     print('delete_child');
     notifyListeners();
   }

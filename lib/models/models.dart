@@ -1,12 +1,14 @@
 class Parent {
   int? id;
   String? fullName;
-  int? pin;
+  String? email;
+  String? pin;
 
   Parent({
     this.id,
     this.fullName,
     this.pin,
+    this.email,
   });
 
   // Convert a Child into a Map. The keys must correspond to the names of the
@@ -16,6 +18,7 @@ class Parent {
       'id': id,
       'fullName': fullName,
       'pin': pin,
+      'email': email,
     };
   }
 
@@ -23,20 +26,22 @@ class Parent {
   // each Child when using the print statement.
   @override
   String toString() {
-    return 'Child{id: $id, fullName: $fullName, pin: $pin}';
+    return 'Parent{id: $id, fullName: $fullName, pin: $pin, email: $email}';
   }
 }
 
-class BTransaction {
+class BankAction {
   int? id;
   int? childId;
-  int? transaction;
-  DateTime? createdAt;
+  int? action;
+  String? note;
+  String? createdAt;
 
-  BTransaction({
+  BankAction({
     this.id,
     this.childId,
-    this.transaction,
+    this.action,
+    this.note,
     this.createdAt,
   });
 
@@ -46,7 +51,8 @@ class BTransaction {
     return {
       'id': id,
       'childId': childId,
-      'lastNamtransactione': transaction,
+      'action': action,
+      'note': note,
       'createdAt': createdAt,
     };
   }
@@ -55,6 +61,6 @@ class BTransaction {
   // each Child when using the print statement.
   @override
   String toString() {
-    return 'Child{id: $id, childId: $childId, transaction: $transaction, createdAt: $createdAt}';
+    return 'Action{id: $id, childId: $childId, action: $action, note: $note, createdAt: $createdAt}';
   }
 }

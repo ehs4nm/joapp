@@ -1,10 +1,16 @@
+import 'dart:convert';
 import 'dart:ui';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jooj_bank/Services/auth_services.dart';
+import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/models/database_handler.dart';
+import 'package:jooj_bank/models/models.dart';
 import 'package:jooj_bank/pages/waiting_rfid_add.dart';
 import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
 import 'package:jooj_bank/widgets/positioned_cancel_btn.dart';
@@ -23,7 +29,10 @@ class NewHomePage extends StatefulWidget {
 }
 
 class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin {
-  ScrollController scrollController = ScrollController();
+  ScrollController childrenScrollController = ScrollController();
+  ScrollController historyScrollController = ScrollController();
+  final player = AudioPlayer();
+  final backgroundAudio = AudioPlayer();
 
   late AnimationController _controller;
   late final List<AnimationController> _digitsController = List.generate(10, (index) => AnimationController(vsync: this, duration: Duration(milliseconds: index * 500)));
@@ -34,13 +43,20 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   late TextEditingController spendController;
   late TextEditingController addSavingController;
   late TextEditingController noteController;
+  late TextEditingController parentNameController;
+  late TextEditingController parentEmailController;
+  late TextEditingController parentPasswordController;
   late TextEditingController newChildController;
   var rainPlaying = false;
   var flarePlaying = false;
   bool touchId = false;
   bool muted = false;
   late String selectedChild = 'Your child';
+  late String selectedChildId = '1';
   late String selectedChildBalance = '000';
+  late String parentName = 'Parent Name';
+  late String parentEmail = 'Parent Email';
+  late String parentPin;
   late String rfidRead = '';
   late int firstDigit = 0;
   late int secondDigit = 0;
@@ -49,13 +65,17 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   final _key = GlobalKey<FormState>();
 
+  late bool isAuthenticated = false;
+
   @override
   void initState() {
     super.initState();
-
     spendController = TextEditingController();
     addSavingController = TextEditingController();
     noteController = TextEditingController();
+    parentNameController = TextEditingController();
+    parentEmailController = TextEditingController();
+    parentPasswordController = TextEditingController();
     newChildController = TextEditingController();
 
     _successController = AnimationController(vsync: this, duration: const Duration(milliseconds: 750));
@@ -68,9 +88,28 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     _thirdController = _digitsController[1];
 
     loadTouchId();
+
     loadMute();
+
+    _userLoggedIn();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (true) openChooseChild(context);
+      if (isAuthenticated) return context.push('/login');
+    });
+
+    loadParent().then((value) {
+      setState(() {
+        parentName = value[0].fullName!;
+        parentEmail = value[0].email!;
+        parentPin = value[0].pin!;
+      });
+    });
+    loadChild().then((value) {
+      setState(() {
+        selectedChildId = value[0].id!.toString();
+        selectedChild = value[0].name;
+        selectedChildBalance = value[0].balance.toString();
+        setDisgits(selectedChildBalance);
+      });
     });
   }
 
@@ -80,7 +119,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     addSavingController.dispose();
     noteController.dispose();
     newChildController.dispose();
-
+    backgroundAudio.dispose();
     _successController.dispose();
     _controller.dispose();
 
@@ -111,7 +150,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
             padding: const EdgeInsets.only(top: 145.0),
             child: Text(
               selectedChild[0].toUpperCase() + selectedChild.substring(1),
-              // selectedChild,
               style: TextStyle(
                 shadows: const <Shadow>[
                   Shadow(offset: Offset(4.0, 4.0), blurRadius: 5.0, color: Colors.white),
@@ -145,7 +183,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
             left: 20,
             child: Material(
               color: Colors.transparent,
-              child: IconButton(onPressed: () => _enableMute(), icon: Image.asset('assets/home/btn-mute-${muted ? 'off' : 'on'}.png'), iconSize: 40),
+              child: IconButton(
+                  onPressed: () {
+                    muteBackgroundAudio();
+                    _enableMute();
+                  },
+                  icon: Image.asset('assets/home/btn-mute-${muted ? 'off' : 'on'}.png'),
+                  iconSize: 40),
             ),
           ),
           Positioned(top: height / 2 - 100, right: -20, child: Lottie.asset('assets/animations/windfan.json', controller: _controller, height: 150)),
@@ -168,7 +212,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   ),
                 ],
               ),
-              // Text(selectedChildBalance.toString()),
             ]),
           ),
           Positioned(
@@ -215,12 +258,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    const SizedBox(height: 20, width: 200),
                     Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
                             Navigator.of(context).pop();
-                            openProfile(context);
+                            openProfile(context, childrenProvider);
                           }, // needed
                           child: Image.asset("assets/settings/btn-profile-settings.png", width: 170, fit: BoxFit.cover),
                         )),
@@ -229,8 +273,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            context.push('/history');
-                          }, // needed
+                            Navigator.of(context).pop();
+                            openHistory(context);
+                          },
                           child: Image.asset("assets/settings/btn-history-settings.png", width: 170, fit: BoxFit.cover),
                         )),
                     const SizedBox(height: 20, width: 200),
@@ -248,9 +293,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          openChooseChild(context);
-                          // context.push('/contact');
-                          print('contact');
+                          Navigator.of(context).pop();
+                          context.push('/contact');
                         }, // needed
                         child: Image.asset("assets/settings/btn-contact-settings.png", width: 170, fit: BoxFit.cover),
                       ),
@@ -259,9 +303,12 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () {
+                        onTap: () async {
                           try {
-                            context.push('/pin');
+                            // SharedPreferences localStorage = await SharedPreferences.getInstance();
+                            // localStorage.remove('token');
+                            AuthServices.logout();
+                            context.push('/login');
                             //logout
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -296,7 +343,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     );
   }
 
-  Future openProfile(context) {
+  Future openProfile(context, childrenProvider) {
     var height = MediaQuery.of(context).size.height;
     return showDialog(
       context: context,
@@ -309,49 +356,158 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
             child: Stack(
               children: [
                 Center(child: Image.asset('assets/settings/bg-profile.png')),
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(onTap: () => context.push('/profile'), child: Image.asset("assets/settings/btn-parent-firstname.png", width: 170, fit: BoxFit.cover)),
-                      ),
-                      const SizedBox(height: 10, width: 200),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(onTap: () => context.push('/history'), child: Image.asset("assets/settings/btn-parent-lastname.png", width: 170, fit: BoxFit.cover)),
-                      ),
-                      const SizedBox(height: 10, width: 200),
-                      childrenList(setState),
-                      const SizedBox(height: 10, width: 200),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(onTap: () => context.push('/contact'), child: Image.asset("assets/settings/btn-email.png", width: 170, fit: BoxFit.cover)),
-                      ),
-                      const SizedBox(height: 10, width: 200),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(onTap: () => context.push('/contact'), child: Image.asset("assets/settings/btn-password.png", width: 170, fit: BoxFit.cover)),
-                      ),
-                      const SizedBox(height: 10, width: 200),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(onTap: () => context.push('/set-pin'), child: Image.asset("assets/settings/btn-four-digit.png", width: 170, fit: BoxFit.cover)),
-                      ),
-                      const SizedBox(height: 10, width: 200),
-                      StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-                        return Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
-                            child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", width: 170, fit: BoxFit.cover),
+                Column(
+                  children: [
+                    const SizedBox(height: 100),
+                    SizedBox(
+                      height: 450.0,
+                      child: Scrollbar(
+                        thickness: 5,
+                        radius: const Radius.circular(5),
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              parentFullNameWidget(setState),
+                              // const SizedBox(height: 10, width: 200),
+                              FutureBuilder(
+                                  future: DatabaseHandler.selectChildren(),
+                                  builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Center(
+                                          child: SizedBox(
+                                        width: 280,
+                                        child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+                                          return ListView.builder(
+                                            physics: const PageScrollPhysics(),
+                                            scrollDirection: Axis.vertical,
+                                            shrinkWrap: true,
+                                            itemCount: snapshot.data?.length,
+                                            itemBuilder: (BuildContext context, int index) {
+                                              return Center(
+                                                child: Stack(children: [
+                                                  Material(
+                                                    color: Colors.transparent,
+                                                    child: TextButton.icon(
+                                                      label: const Text(''),
+                                                      onPressed: () {
+                                                        // Navigator.of(context).pop();
+                                                      },
+                                                      icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                                        Row(
+                                                          children: [
+                                                            Material(
+                                                              color: Colors.transparent,
+                                                              child: InkWell(
+                                                                onTap: () {
+                                                                  Navigator.of(context).pop();
+                                                                  openDeleteChild(context, childrenProvider, snapshot.data![index]['id'], snapshot.data![index]['name']);
+                                                                },
+                                                                child: Image.asset('assets/settings/btn-x.png', height: 25),
+                                                              ),
+                                                            ),
+                                                            Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                                            Material(
+                                                              color: Colors.transparent,
+                                                              child: InkWell(
+                                                                  onTap: () {
+                                                                    setState(() {
+                                                                      selectedChild = snapshot.data![index]['name'];
+                                                                      selectedChildId = snapshot.data![index]['id'].toString();
+                                                                      selectedChildBalance = snapshot.data![index]['balance'].toString();
+                                                                      if (selectedChildBalance.length < 2) {
+                                                                        selectedChildBalance = "00$selectedChildBalance";
+                                                                      } else if (selectedChildBalance.length < 3) {
+                                                                        selectedChildBalance = "0$selectedChildBalance";
+                                                                      }
+                                                                      setDisgits(selectedChildBalance);
+                                                                    });
+                                                                  },
+                                                                  child: Image.asset('assets/settings/btn-${int.parse(selectedChildId) == snapshot.data![index]['id'] ? "" : "un"}checked.png',
+                                                                      height: 25)),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Text(snapshot.data![index]['name'],
+                                                            style: const TextStyle(shadows: <Shadow>[
+                                                              Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                            ], fontFamily: 'waytosun', color: Colors.white),
+                                                            textAlign: TextAlign.center)
+                                                      ]),
+                                                    ),
+                                                  ),
+                                                ]),
+                                              );
+                                            },
+                                          );
+                                        }),
+                                      ));
+                                    } else {
+                                      return const Center(child: CircularProgressIndicator());
+                                    }
+                                  }),
+                              parentEmailWidget(setState),
+                              Center(
+                                child: SizedBox(
+                                  height: 60,
+                                  width: 220,
+                                  child: Center(
+                                    child: Stack(children: [
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: TextButton.icon(
+                                          label: const Text(''),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            openParentPassword();
+                                          },
+                                          icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                            Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                            const Text('Password',
+                                                style: TextStyle(shadows: <Shadow>[
+                                                  Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                ], fontFamily: 'waytosun', color: Colors.white),
+                                                textAlign: TextAlign.center)
+                                          ]),
+                                        ),
+                                      ),
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10, width: 200),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => context.push('/set-pin'),
+                                  child: Stack(alignment: AlignmentDirectional.center, children: [
+                                    Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                    const Text('4 Digit Code',
+                                        style: TextStyle(shadows: <Shadow>[
+                                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                        ], fontFamily: 'waytosun', color: Colors.white),
+                                        textAlign: TextAlign.center)
+                                  ]),
+                                ),
+                              ),
+                              const SizedBox(height: 10, width: 200),
+                              StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
+                                    child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", width: 170, fit: BoxFit.cover),
+                                  ),
+                                );
+                              }),
+                            ],
                           ),
-                        );
-                      }),
-                    ],
-                  ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Positioned(
                     left: 0,
@@ -373,14 +529,18 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // const SizedBox(height: 160),
+          const SizedBox(height: 40),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8.0, 0, 8),
+            child: Text('Select the child to see', style: TextStyle(fontSize: 22, color: Colors.blueGrey.shade700, fontFamily: 'waytosun')),
+          ),
           FutureBuilder(
               future: DatabaseHandler.selectChildren(),
               builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                 if (snapshot.hasData) {
                   return Center(
                     child: SizedBox(
-                      height: 110,
+                      height: 280,
                       width: 220,
                       child: RawScrollbar(
                         thumbColor: const Color.fromARGB(255, 88, 163, 219),
@@ -388,10 +548,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         thickness: 5,
                         radius: const Radius.circular(5),
                         thumbVisibility: true,
-                        controller: scrollController,
+                        controller: childrenScrollController,
                         child: ListView.builder(
                           physics: const PageScrollPhysics(),
-                          controller: scrollController,
+                          controller: childrenScrollController,
                           scrollDirection: Axis.vertical,
                           shrinkWrap: true,
                           itemCount: snapshot.data?.length,
@@ -403,22 +563,17 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                   child: TextButton.icon(
                                     label: const Text(''),
                                     onPressed: () {
-                                      setState(() {
-                                        selectedChild = snapshot.data![index]['name'];
-                                        selectedChildBalance = snapshot.data![index]['balance'].toString();
-                                        if (selectedChildBalance.length < 2) {
-                                          selectedChildBalance = "00$selectedChildBalance";
-                                        } else if (selectedChildBalance.length < 3) {
-                                          selectedChildBalance = "0$selectedChildBalance";
-                                        }
-                                        setDisgits(selectedChildBalance);
-                                      });
-                                      print('$selectedChild , $selectedChildBalance');
                                       Navigator.of(context).pop();
+                                      // choosingChild(setState, snapshot, index);
+                                      openHistoryChild(snapshot.data![index]['id']);
                                     },
                                     icon: Stack(alignment: AlignmentDirectional.center, children: [
                                       Image.asset('assets/home/btn-big-blue.png', height: 40),
-                                      Text(snapshot.data![index]['name'], style: const TextStyle(fontFamily: 'waytosun', color: Colors.white), textAlign: TextAlign.center)
+                                      Text(snapshot.data![index]['name'],
+                                          style: const TextStyle(shadows: <Shadow>[
+                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                          ], fontFamily: 'waytosun', color: Colors.white),
+                                          textAlign: TextAlign.center)
                                     ]),
                                   ),
                                 ),
@@ -427,6 +582,116 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                             );
                           },
                         ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              }),
+        ],
+      ),
+    );
+  }
+
+  void choosingChild(StateSetter setState, AsyncSnapshot<List<Map<String, dynamic>>> snapshot, int index) {
+    setState(() {
+      selectedChild = snapshot.data![index]['name'];
+      selectedChildId = snapshot.data![index]['id'];
+      selectedChildBalance = snapshot.data![index]['balance'].toString();
+      if (selectedChildBalance.length < 2) {
+        selectedChildBalance = "00$selectedChildBalance";
+      } else if (selectedChildBalance.length < 3) {
+        selectedChildBalance = "0$selectedChildBalance";
+      }
+      setDisgits(selectedChildBalance);
+    });
+  }
+
+  Container parentFullNameWidget(StateSetter setState) {
+    return Container(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FutureBuilder(
+              future: DatabaseHandler.selectParent(),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  return Center(
+                    child: SizedBox(
+                      height: 60,
+                      width: 220,
+                      child: Center(
+                        child: Stack(children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: TextButton.icon(
+                              label: const Text(''),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                openParentName();
+                              },
+                              icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                Text(parentName,
+                                    style: const TextStyle(shadows: <Shadow>[
+                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                    ], fontFamily: 'waytosun', color: Colors.white),
+                                    textAlign: TextAlign.center)
+                              ]),
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              }),
+        ],
+      ),
+    );
+  }
+
+  Container parentEmailWidget(StateSetter setState) {
+    return Container(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FutureBuilder(
+              future: DatabaseHandler.selectParent(),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  return Center(
+                    child: SizedBox(
+                      height: 60,
+                      width: 220,
+                      child: Center(
+                        child: Stack(children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: TextButton.icon(
+                              label: const Text(''),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                openParentEmail();
+                              },
+                              icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                Text(parentEmail,
+                                    style: const TextStyle(shadows: <Shadow>[
+                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                    ], fontFamily: 'waytosun', color: Colors.white),
+                                    textAlign: TextAlign.center)
+                              ]),
+                            ),
+                          ),
+                        ]),
                       ),
                     ),
                   );
@@ -502,7 +767,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         label: const Text(''),
                         onPressed: () {
                           childrenProvider.insertDatabase(newChildController.text, 0);
-                          // newChildController.clear();
+                          newChildController.clear();
                           Navigator.of(context).pop();
                         },
                         icon: Image.asset('assets/home/btn-add.png', height: 50),
@@ -537,6 +802,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 child: TextButton.icon(
                   label: const Text(''),
                   onPressed: () {
+                    if (addSavingController.value.text.isEmpty || addSavingController.value.text == '0' || addSavingController.value.text == '') return;
+
                     Navigator.of(context).pop();
                     openTryAgain();
                   },
@@ -606,6 +873,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 child: TextButton.icon(
                   label: const Text(''),
                   onPressed: () {
+                    if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
                     Navigator.of(context).pop();
                     openTryAgain();
                   },
@@ -670,11 +938,21 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     return touchId;
   }
 
-  void loadMute() async {
+  loadMute() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       muted = prefs.getBool('muted') ?? false;
     });
+    if (!muted) {
+      backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3'));
+    } else {
+      backgroundAudio.setSource(AssetSource('sounds/background-soundtrack.mp3'));
+    }
+
+    backgroundAudio.onPlayerComplete.listen((event) {
+      backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3'));
+    });
+    return muted;
   }
 
   void _enableMute() async {
@@ -759,9 +1037,15 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   void playSound(String sound) {
-    if (muted) return;
-    final player = AudioPlayer();
     player.play(AssetSource('sounds/$sound.wav'));
+  }
+
+  void muteBackgroundAudio() async {
+    if (!muted) {
+      await backgroundAudio.pause();
+    } else {
+      await backgroundAudio.resume();
+    }
   }
 
   void addTobalance() {
@@ -770,6 +1054,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
+    DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addSavingController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
     _successController.reset();
     _successController.animateTo(750);
@@ -795,6 +1080,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
+    DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
     _successController.reset();
     _successController.animateTo(750);
@@ -858,6 +1144,408 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 Lottie.asset('assets/animations/success.json', controller: _successController, height: 220),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<List<Parent>> loadParent() async {
+    return await DatabaseHandler.selectParent();
+  }
+
+  Future<List<Child>> loadChild() async {
+    return await DatabaseHandler.selectChild();
+  }
+
+  Future openParentName() {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            // height: 300,
+            width: 500,
+            child: Form(
+              key: _key,
+              child: Stack(children: [
+                Image.asset('assets/home/bg-parent-name.png', height: 300),
+                Positioned(
+                  bottom: 120,
+                  left: 65,
+                  width: 200,
+                  child: Center(
+                    child: SizedBox(
+                      width: 160,
+                      child: TextField(
+                        autofocus: true,
+                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                        decoration:
+                            InputDecoration(hintStyle: const TextStyle(fontFamily: 'waytosun'), labelStyle: const TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: parentName),
+                        controller: parentNameController,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 55,
+                  left: 45,
+                  width: 250,
+                  child: SizedBox(
+                    width: 250,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: TextButton.icon(
+                        label: const Text(''),
+                        onPressed: () {
+                          DatabaseHandler.update(
+                              'parents',
+                              {
+                                'fullName': parentNameController.text,
+                              },
+                              'id',
+                              '1');
+                          setState(() {
+                            parentName = parentNameController.text;
+                          });
+                          parentNameController.clear();
+                          Navigator.of(context).pop();
+                        },
+                        icon: Image.asset('assets/home/btn-add.png', height: 50),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future openParentEmail() {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            // height: 300,
+            width: 500,
+            child: Form(
+              key: _key,
+              child: Stack(children: [
+                Image.asset('assets/home/bg-parent-email.png', height: 300),
+                Positioned(
+                  bottom: 120,
+                  left: 65,
+                  width: 200,
+                  child: Center(
+                    child: SizedBox(
+                      width: 160,
+                      child: TextField(
+                        autofocus: true,
+                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                        decoration:
+                            const InputDecoration(hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Enter Your email'),
+                        controller: parentEmailController,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 55,
+                  left: 45,
+                  width: 250,
+                  child: SizedBox(
+                    width: 250,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: TextButton.icon(
+                        label: const Text(''),
+                        onPressed: () {
+                          if (parentEmailController.text.isEmpty) return;
+                          if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(parentEmailController.text)) return;
+                          DatabaseHandler.update('parents', {'email': parentEmailController.text}, 'id', '1');
+                          emailChanged();
+                          setState(() {
+                            parentEmail = parentEmailController.text;
+                          });
+                          parentEmailController.clear();
+                          Navigator.of(context).pop();
+                        },
+                        icon: Image.asset('assets/home/btn-add.png', height: 50),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future openParentPassword() {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            // height: 300,
+            width: 500,
+            child: Form(
+              key: _key,
+              child: Stack(children: [
+                Image.asset('assets/home/bg-parent-password.png', height: 300),
+                Positioned(
+                  bottom: 120,
+                  left: 65,
+                  width: 200,
+                  child: Center(
+                    child: SizedBox(
+                      width: 160,
+                      child: TextField(
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        autofocus: true,
+                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                        decoration:
+                            const InputDecoration(hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'min 8 charecters'),
+                        controller: parentPasswordController,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 55,
+                  left: 45,
+                  width: 250,
+                  child: SizedBox(
+                    width: 250,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: TextButton.icon(
+                        label: const Text(''),
+                        onPressed: () {
+                          if (parentPasswordController.text.isEmpty) return;
+                          if (parentPasswordController.text.length < 8) return;
+                          passwordChanged();
+                          parentPasswordController.clear();
+                          Navigator.of(context).pop();
+                        },
+                        icon: Image.asset('assets/home/btn-add.png', height: 50),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future openHistory(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            width: 500,
+            child: Stack(children: [
+              Center(child: Image.asset('assets/settings/bg-history.png')),
+              Center(child: childrenList(setState)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future openHistoryChild(childId) {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            width: 500,
+            child: Stack(children: [
+              Center(child: Image.asset('assets/settings/bg-history.png')),
+              Center(
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                  const SizedBox(height: 50),
+                  Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
+                  FutureBuilder(
+                      future: DatabaseHandler.selectActionByChildId(childId.toString()),
+                      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                        if (snapshot.hasData) {
+                          return SizedBox(
+                            height: 280,
+                            child: RawScrollbar(
+                              thumbColor: const Color.fromARGB(255, 88, 163, 219),
+                              // shape: const StadiumBorder(side: BorderSide(color: Colors.brown, width: 3.0)),
+                              thickness: 5,
+                              radius: const Radius.circular(5),
+                              thumbVisibility: true,
+                              controller: historyScrollController,
+                              child: ListView.builder(
+                                  physics: const PageScrollPhysics(),
+                                  controller: historyScrollController,
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  itemCount: snapshot.data?.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.fromLTRB(40.0, 0, 40, 5),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(15.0),
+                                            child: (snapshot.data![index]['value'] > 0)
+                                                ? Text("+${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
+                                                    style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.green))
+                                                : Text("-${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
+                                                    style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.red)),
+                                          ),
+                                          Column(
+                                            children: [
+                                              Text(snapshot.data![index]['note'], style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
+                                              Text((DateFormat.MMMd().add_jm().format(DateTime.parse(snapshot.data![index]['createdAt'])).toString()),
+                                                  style: TextStyle(fontFamily: 'waytosun', fontSize: 12, color: Colors.blueGrey.shade300)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          );
+                        } else {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                      }),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future _userLoggedIn() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+    isAuthenticated = (token == '') ? false : true;
+    print(token);
+    return token == '' ? false : true;
+  }
+
+  emailChanged() async {
+    if (parentEmailController.text.isNotEmpty) {
+      http.Response? response = await AuthServices.changeEmail(parentEmailController.text);
+      if (response == null || response.statusCode == 500 || response.statusCode == 404) {
+        errorSnackBar(context, 'Network connection error!');
+        return;
+      }
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        errorSnackBar(context, 'Email changed!');
+      } else {
+        errorSnackBar(context, responseMap.values.first);
+      }
+    } else {
+      errorSnackBar(context, 'enter all required fields');
+    }
+  }
+
+  passwordChanged() async {
+    if (parentPasswordController.text.isNotEmpty) {
+      http.Response? response = await AuthServices.changePassword(parentPasswordController.text);
+      if (response == null || response.statusCode == 500 || response.statusCode == 404) {
+        errorSnackBar(context, 'Network connection error!');
+        return;
+      }
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        errorSnackBar(context, 'Email changed!');
+      } else {
+        errorSnackBar(context, responseMap.values.first);
+      }
+    } else {
+      errorSnackBar(context, 'enter all required fields');
+    }
+  }
+
+  openDeleteChild(context, childrenProvider, childIdToBeRemoved, String childNameToBeRemoved) {
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Dialog(
+          alignment: Alignment.topCenter,
+          backgroundColor: Colors.transparent,
+          child: Form(
+            key: _key,
+            child: Stack(children: [
+              Center(child: Image.asset('assets/home/bg-remove-child.png', height: 300)),
+              Center(
+                child: Text(
+                  childNameToBeRemoved,
+                  style: TextStyle(shadows: const <Shadow>[
+                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.white),
+                  ], fontFamily: 'waytosun', color: Colors.blueGrey.shade900, fontSize: 25),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 325),
+                    Material(
+                      color: Colors.transparent,
+                      child: TextButton.icon(
+                        label: const Text(''),
+                        onPressed: () {
+                          childrenProvider.deleteChildById(childIdToBeRemoved);
+                          loadChild().then((value) {
+                            setState(() {
+                              selectedChildId = value[0].id!.toString();
+                              selectedChild = value[0].name;
+                              selectedChildBalance = value[0].balance.toString();
+                            });
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        icon: Image.asset('assets/settings/btn-yes.png', height: 50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
           ),
         ),
       ),

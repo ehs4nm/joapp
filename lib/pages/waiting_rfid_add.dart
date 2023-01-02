@@ -26,14 +26,15 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
       ..initialize().then((_) {
         setState(() {});
       })
-      ..setVolume(widget.muted ? 0.0 : 1.0);
+      ..setVolume(1.0);
+    // ..setVolume(widget.muted ? 0.0 : 1.0);
     _playVideo();
   }
 
   void _playVideo() async {
     String rfidRead = 'a';
     // loadMute();
-    _addController.setVolume(widget.muted ? 0.0 : 1.0);
+    _addController.setVolume(1.0);
     _addController.play();
     await Future.delayed(const Duration(seconds: 1));
     Navigator.of(context).pop(rfidRead);
