@@ -18,8 +18,8 @@ class DatabaseHandler {
       'CREATE TABLE IF NOT EXISTS parents (id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT NULL,email TEXT NULL, pin TEXT NULL );',
       'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, balance INTEGER NULL, rfid TEXT NULL ); ',
       'CREATE TABLE IF NOT EXISTS actions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, value INTEGER NULL, note TEXT NULL, createdAt TEXT NULL); ',
-      'INSERT INTO parents (fullName, email, pin) VALUES("Parent Name", "Email Address","1234");',
-      'INSERT INTO children (name, balance, rfid) VALUES("CHild name", 0,"1234");',
+      'INSERT INTO parents (fullName, email, pin) VALUES("ehsan", "mohiti.ehsan@gmail.com","1234");',
+      'INSERT INTO children (name, balance, rfid) VALUES("sara", 0,"1234");',
       'INSERT INTO actions (childId, value,note, createdAt) VALUES(1, 0,"note",datetime("now"));',
       // '''CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, transaction INTEGER NULL, createdAt DATETIME
       //       FOREIGN KEY (childId) REFERENCES children (id) ON DELETE NO ACTION ON UPDATE NO ACTION );''',
@@ -132,6 +132,7 @@ class DatabaseHandler {
         id: maps[i]['id'],
         name: maps[i]['name'],
         balance: maps[i]['balance'],
+        rfid: maps[i]['rfid'],
       );
     });
   }

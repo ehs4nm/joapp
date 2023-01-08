@@ -11,24 +11,27 @@ import 'package:jooj_bank/Services/auth_services.dart';
 import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/models/models.dart';
+import 'package:jooj_bank/pages/pin_page.dart';
 import 'package:jooj_bank/pages/waiting_rfid_add.dart';
 import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
 import 'package:jooj_bank/widgets/positioned_cancel_btn.dart';
 import 'package:lottie/lottie.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 
 import '../providers/children_provider.dart';
+import 'intro_app.dart';
 
 class NewHomePage extends StatefulWidget {
   const NewHomePage({super.key});
-
   @override
   State<NewHomePage> createState() => _NewHomePageState();
 }
 
 class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ScrollController childrenScrollController = ScrollController();
   ScrollController historyScrollController = ScrollController();
   final player = AudioPlayer();
@@ -54,9 +57,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   late String selectedChild = 'Your child';
   late String selectedChildId = '1';
   late String selectedChildBalance = '000';
+  late String selectedChildRfid = '';
   late String parentName = 'Parent Name';
   late String parentEmail = 'Parent Email';
-  late String parentPin;
+  late String parentPin = '1234';
   late String rfidRead = '';
   late int firstDigit = 0;
   late int secondDigit = 0;
@@ -108,8 +112,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         selectedChildId = value[0].id!.toString();
         selectedChild = value[0].name;
         selectedChildBalance = value[0].balance.toString();
+        selectedChildRfid = value[0].rfid.toString();
         setDisgits(selectedChildBalance);
       });
+    }).then((value) {
+      if (selectedChildRfid == '') openSetRfidForChild(selectedChildId);
     });
   }
 
@@ -141,104 +148,104 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   Material mainHomeWidget(BuildContext context, double height, double width, childrenProvider) {
     return Material(
-      type: MaterialType.transparency,
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Image.asset('assets/home/bg-home-no-windfan.png', height: height, width: width, fit: BoxFit.cover),
-          Padding(
-            padding: const EdgeInsets.only(top: 145.0),
-            child: Text(
-              selectedChild[0].toUpperCase() + selectedChild.substring(1),
-              style: TextStyle(
-                shadows: const <Shadow>[
-                  Shadow(offset: Offset(4.0, 4.0), blurRadius: 5.0, color: Colors.white),
-                  Shadow(offset: Offset(3.0, 2.0), blurRadius: 1, color: Color.fromARGB(255, 121, 35, 51)),
-                ],
-                fontSize: 55,
-                fontFamily: 'lapsus',
-                // letterSpacing: -1.51,
-                fontWeight: FontWeight.w600,
-                foreground: Paint()
-                  ..shader = ui.Gradient.linear(
-                    const Offset(0, 0),
-                    const Offset(300, 300),
-                    <Color>[const Color.fromARGB(255, 248, 228, 57).withOpacity(1), const Color.fromARGB(255, 243, 183, 66).withOpacity(1), const Color.fromARGB(255, 227, 57, 36).withOpacity(1)],
-                    [0.0, 0.5, 1.0],
-                  ),
-              ),
-            ),
-          ),
-          Column(children: const [SizedBox(height: 100)]),
+        key: _scaffoldKey,
+        type: MaterialType.transparency,
+        child: Stack(alignment: Alignment.topCenter, children: [
+          Image.asset('assets/home/bg-home-no-windfan.png', height: height, fit: BoxFit.cover),
+          Column(children: [
+            SizedBox(height: height * .25),
+            SizedBox(
+                height: height * .25,
+                child: Text(selectedChild[0].toUpperCase() + selectedChild.substring(1),
+                    style: TextStyle(
+                        shadows: const <Shadow>[
+                          Shadow(offset: Offset(4.0, 4.0), blurRadius: 5.0, color: Colors.white),
+                          Shadow(offset: Offset(3.0, 2.0), blurRadius: 1, color: Color.fromARGB(255, 121, 35, 51)),
+                        ],
+                        fontSize: 55,
+                        fontFamily: 'lapsus',
+                        // letterSpacing: -1.51,
+                        fontWeight: FontWeight.w600,
+                        foreground: Paint()
+                          ..shader = ui.Gradient.linear(
+                            const Offset(0, 0),
+                            const Offset(300, 300),
+                            <Color>[
+                              const Color.fromARGB(255, 248, 228, 57).withOpacity(1),
+                              const Color.fromARGB(255, 243, 183, 66).withOpacity(1),
+                              const Color.fromARGB(255, 227, 57, 36).withOpacity(1)
+                            ],
+                            [0.0, 0.5, 1.0],
+                          ))))
+          ]),
           Positioned(
-            top: 30,
-            right: 20,
-            child: Material(
-              color: Colors.transparent,
-              child: IconButton(onPressed: () => openSettings(context, childrenProvider), icon: Image.asset('assets/home/btn-settings.png'), iconSize: 40),
-            ),
-          ),
+              top: 30,
+              right: 20,
+              child: Material(
+                color: Colors.transparent,
+                child: IconButton(onPressed: () => openSettings(context, childrenProvider), icon: Image.asset('assets/home/btn-settings.png'), iconSize: height * 0.05),
+              )),
           Positioned(
             top: 30,
             left: 20,
             child: Material(
-              color: Colors.transparent,
-              child: IconButton(
-                  onPressed: () {
-                    muteBackgroundAudio();
-                    _enableMute();
-                  },
-                  icon: Image.asset('assets/home/btn-mute-${muted ? 'off' : 'on'}.png'),
-                  iconSize: 40),
-            ),
+                color: Colors.transparent,
+                child: IconButton(
+                    onPressed: () {
+                      muteBackgroundAudio();
+                      _enableMute();
+                    },
+                    icon: Image.asset('assets/home/btn-mute-${muted ? 'off' : 'on'}.png'),
+                    iconSize: 40)),
           ),
-          Positioned(top: height / 2 - 100, right: -20, child: Lottie.asset('assets/animations/windfan.json', controller: _controller, height: 150)),
+          Positioned(top: height / 2 - height * 0.125, right: -20, child: Lottie.asset('assets/animations/windfan.json', controller: _controller, height: height * 0.2)),
           Positioned(
-            bottom: 70,
-            child: Stack(alignment: AlignmentDirectional.center, children: [
-              Image.asset('assets/home/piggy-with-coin.png', height: 200),
-              Column(
-                children: [
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset('assets/countdown/dollar.png', height: 30),
-                      Lottie.asset('assets/countdown/$firstDigit.json', controller: _firstController, height: 30),
-                      Lottie.asset('assets/countdown/$secondDigit.json', controller: _secondController, height: 30),
-                      Lottie.asset('assets/countdown/$thirdDigit.json', controller: _thirdController, height: 30),
-                    ],
-                  ),
-                ],
-              ),
-            ]),
-          ),
+              bottom: height * 0.1,
+              child: Stack(alignment: AlignmentDirectional.center, children: [
+                Image.asset('assets/home/piggy-with-coin.png', height: height * 0.3),
+                Column(children: [
+                  SizedBox(height: height * 0.025),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceAround, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                    Image.asset('assets/countdown/dollar.png', height: height * 0.035),
+                    Lottie.asset('assets/countdown/$firstDigit.json', controller: _firstController, height: height * 0.035),
+                    Lottie.asset('assets/countdown/$secondDigit.json', controller: _secondController, height: height * 0.035),
+                    Lottie.asset('assets/countdown/$thirdDigit.json', controller: _thirdController, height: height * 0.035),
+                  ])
+                ])
+              ])),
           Positioned(
+            top: height * 0.45,
+            width: width * 0.5,
             child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: rainPlaying, child: Image.asset('assets/animations/coin-rain.gif')),
           ),
           Positioned(
+            top: height * 0.4,
+            width: width * 0.5,
             child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: flarePlaying, child: Image.asset('assets/animations/star-rain.gif')),
           ),
-          Positioned(top: 170, child: Lottie.asset('assets/animations/rainbow.json', controller: _controller, height: 220)),
           Positioned(
-            bottom: 40,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Material(
-                    color: Colors.transparent,
-                    child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: IconButton(onPressed: () => openAddToSaving(context), icon: Image.asset('assets/home/btn-plus.png'), iconSize: 45))),
-                Material(color: Colors.transparent, child: IconButton(onPressed: () => {openSpend(context)}, icon: Image.asset('assets/home/btn-minus.png'), iconSize: 45)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+              top: height * 0.3,
+              child: Visibility(
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: (rainPlaying || flarePlaying),
+                  child: Lottie.asset('assets/animations/rainbow.json', controller: _controller, height: height * 0.2))),
+          Positioned(
+              bottom: height * 0.05,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                // crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Material(
+                      color: Colors.transparent,
+                      child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: IconButton(onPressed: () => openAddToSaving(context), icon: Image.asset('assets/home/btn-plus.png'), iconSize: width * 0.1))),
+                  Material(color: Colors.transparent, child: IconButton(onPressed: () => {openSpend(context)}, icon: Image.asset('assets/home/btn-minus.png'), iconSize: width * 0.1)),
+                ],
+              )),
+        ]));
   }
 
   Future openSettings(context, childrenProvider) {
@@ -258,84 +265,95 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 20, width: 200),
-                    Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            openProfile(context, childrenProvider);
-                          }, // needed
-                          child: Image.asset("assets/settings/btn-profile-settings.png", width: 170, fit: BoxFit.cover),
+                    SizedBox(height: height * 0.02),
+                    SizedBox(
+                        height: height * 0.05,
+                        width: 200,
+                        child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  openProfile(context, childrenProvider);
+                                }, // needed
+                                child: Image.asset("assets/settings/btn-profile-settings.png")))),
+                    SizedBox(height: height * 0.02),
+                    SizedBox(
+                        height: height * 0.05,
+                        width: 200,
+                        child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                openHistory(context);
+                              },
+                              child: Image.asset("assets/settings/btn-history-settings.png"),
+                            ))),
+                    SizedBox(height: height * 0.02),
+                    SizedBox(
+                        height: height * 0.05,
+                        width: 200,
+                        child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                openAddChild(context, childrenProvider);
+                              },
+                              child: Image.asset("assets/settings/btn-add-child-settings.png"),
+                            ))),
+                    SizedBox(height: height * 0.02),
+                    SizedBox(
+                        height: height * 0.05,
+                        width: 200,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              context.push('/contact');
+                            },
+                            child: Image.asset("assets/settings/btn-contact-settings.png"),
+                          ),
                         )),
-                    const SizedBox(height: 20, width: 200),
-                    Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            openHistory(context);
-                          },
-                          child: Image.asset("assets/settings/btn-history-settings.png", width: 170, fit: BoxFit.cover),
+                    SizedBox(height: height * 0.02),
+                    SizedBox(
+                        height: height * 0.05,
+                        width: 200,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              try {
+                                backgroundAudio.stop();
+                                AuthServices.logout();
+                                context.push('/login');
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: const Text('Snackbar message'),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                  margin: EdgeInsets.only(bottom: height - 100, right: 20, left: 20),
+                                ));
+                              }
+                              Navigator.of(context).pop();
+                            },
+                            child: Image.asset("assets/settings/btn-logout-settings.png"),
+                          ),
                         )),
-                    const SizedBox(height: 20, width: 200),
-                    Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            openAddChild(context, childrenProvider);
-                          }, // needed
-                          child: Image.asset("assets/settings/btn-add-child-settings.png", width: 170, fit: BoxFit.cover),
-                        )),
-                    const SizedBox(height: 20, width: 200),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          context.push('/contact');
-                        }, // needed
-                        child: Image.asset("assets/settings/btn-contact-settings.png", width: 170, fit: BoxFit.cover),
-                      ),
-                    ),
-                    const SizedBox(height: 20, width: 200),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          try {
-                            // SharedPreferences localStorage = await SharedPreferences.getInstance();
-                            // localStorage.remove('token');
-                            AuthServices.logout();
-                            context.push('/login');
-                            //logout
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: const Text('Snackbar message'),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                              margin: EdgeInsets.only(bottom: height - 100, right: 20, left: 20),
-                            ));
-                          }
-                          Navigator.of(context).pop();
-                        },
-                        child: Image.asset("assets/settings/btn-logout-settings.png", width: 170, fit: BoxFit.cover),
-                      ),
-                    ),
                   ],
                 ),
               ),
               Positioned(
                   left: 0,
-                  top: 50,
+                  top: height * 0.10,
                   child: InkWell(
                       enableFeedback: false,
                       splashColor: Colors.transparent,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const SizedBox(width: 100.0, height: 100.0))),
+                      highlightColor: Colors.transparent,
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const SizedBox(width: 60.0, height: 200))),
             ]),
           ),
         ),
@@ -358,9 +376,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 Center(child: Image.asset('assets/settings/bg-profile.png')),
                 Column(
                   children: [
-                    const SizedBox(height: 100),
+                    SizedBox(height: height * 0.2),
                     SizedBox(
-                      height: 450.0,
+                      height: height * 0.56,
                       child: Scrollbar(
                         thickness: 5,
                         radius: const Radius.circular(5),
@@ -401,14 +419,16 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                             Material(
                                                               color: Colors.transparent,
                                                               child: InkWell(
+                                                                focusColor: Colors.transparent,
+                                                                highlightColor: Colors.transparent,
                                                                 onTap: () {
                                                                   Navigator.of(context).pop();
                                                                   openDeleteChild(context, childrenProvider, snapshot.data![index]['id'], snapshot.data![index]['name']);
                                                                 },
-                                                                child: Image.asset('assets/settings/btn-x.png', height: 25),
+                                                                child: Image.asset('assets/settings/btn-x.png', height: height * 0.0312),
                                                               ),
                                                             ),
-                                                            Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                                            Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
                                                             Material(
                                                               color: Colors.transparent,
                                                               child: InkWell(
@@ -417,6 +437,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                                       selectedChild = snapshot.data![index]['name'];
                                                                       selectedChildId = snapshot.data![index]['id'].toString();
                                                                       selectedChildBalance = snapshot.data![index]['balance'].toString();
+                                                                      selectedChildRfid = snapshot.data![index]['rfid'].toString();
                                                                       if (selectedChildBalance.length < 2) {
                                                                         selectedChildBalance = "00$selectedChildBalance";
                                                                       } else if (selectedChildBalance.length < 3) {
@@ -424,9 +445,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                                       }
                                                                       setDisgits(selectedChildBalance);
                                                                     });
+                                                                    if (selectedChildRfid == 'null') openSetRfidForChild(selectedChildId);
+                                                                    Navigator.of(context).pop();
                                                                   },
                                                                   child: Image.asset('assets/settings/btn-${int.parse(selectedChildId) == snapshot.data![index]['id'] ? "" : "un"}checked.png',
-                                                                      height: 25)),
+                                                                      height: height * 0.0312)),
                                                             ),
                                                           ],
                                                         ),
@@ -451,7 +474,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               parentEmailWidget(setState),
                               Center(
                                 child: SizedBox(
-                                  height: 60,
+                                  height: height * 0.075,
                                   width: 220,
                                   child: Center(
                                     child: Stack(children: [
@@ -464,7 +487,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                             openParentPassword();
                                           },
                                           icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                            Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                            Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
                                             const Text('Password',
                                                 style: TextStyle(shadows: <Shadow>[
                                                   Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
@@ -477,13 +500,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10, width: 200),
+                              SizedBox(height: height * 0.0125, width: 200),
                               Material(
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () => context.push('/set-pin'),
                                   child: Stack(alignment: AlignmentDirectional.center, children: [
-                                    Image.asset('assets/home/btn-big-blue.png', height: 40),
+                                    Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
                                     const Text('4 Digit Code',
                                         style: TextStyle(shadows: <Shadow>[
                                           Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
@@ -492,13 +515,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                   ]),
                                 ),
                               ),
-                              const SizedBox(height: 10, width: 200),
+                              SizedBox(height: height * 0.0312, width: 200),
                               StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
                                 return Material(
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
-                                    child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", width: 170, fit: BoxFit.cover),
+                                    child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", height: height * 0.05, fit: BoxFit.cover),
                                   ),
                                 );
                               }),
@@ -512,7 +535,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 Positioned(
                     left: 0,
                     top: 0,
-                    child: InkWell(enableFeedback: false, splashColor: Colors.transparent, onTap: () => Navigator.of(context).pop(), child: const SizedBox(width: 100.0, height: 100.0)))
+                    child: InkWell(
+                        enableFeedback: false,
+                        splashColor: Colors.transparent,
+                        focusColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const SizedBox(width: 60.0, height: 200.0)))
               ],
             ),
           ),
@@ -522,76 +551,59 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   Container childrenList(StateSetter setState) {
+    var height = MediaQuery.of(context).size.height;
     return Container(
-      color: Colors.transparent,
-      // height: 350,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 40),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 8.0, 0, 8),
-            child: Text('Select the child to see', style: TextStyle(fontSize: 22, color: Colors.blueGrey.shade700, fontFamily: 'waytosun')),
-          ),
+        color: Colors.transparent,
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+          SizedBox(height: height * 0.05),
+          Padding(padding: const EdgeInsets.fromLTRB(0, 8.0, 0, 8), child: Text('Select child', style: TextStyle(fontSize: 22, color: Colors.blueGrey.shade700, fontFamily: 'waytosun'))),
           FutureBuilder(
               future: DatabaseHandler.selectChildren(),
               builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                 if (snapshot.hasData) {
                   return Center(
-                    child: SizedBox(
-                      height: 280,
-                      width: 220,
-                      child: RawScrollbar(
-                        thumbColor: const Color.fromARGB(255, 88, 163, 219),
-                        // shape: const StadiumBorder(side: BorderSide(color: Colors.brown, width: 3.0)),
-                        thickness: 5,
-                        radius: const Radius.circular(5),
-                        thumbVisibility: true,
-                        controller: childrenScrollController,
-                        child: ListView.builder(
-                          physics: const PageScrollPhysics(),
-                          controller: childrenScrollController,
-                          scrollDirection: Axis.vertical,
-                          shrinkWrap: true,
-                          itemCount: snapshot.data?.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Center(
-                              child: Stack(children: [
-                                Material(
-                                  color: Colors.transparent,
-                                  child: TextButton.icon(
-                                    label: const Text(''),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      // choosingChild(setState, snapshot, index);
-                                      openHistoryChild(snapshot.data![index]['id']);
-                                    },
-                                    icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                      Image.asset('assets/home/btn-big-blue.png', height: 40),
-                                      Text(snapshot.data![index]['name'],
-                                          style: const TextStyle(shadows: <Shadow>[
-                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                          ], fontFamily: 'waytosun', color: Colors.white),
-                                          textAlign: TextAlign.center)
-                                    ]),
-                                  ),
-                                ),
-                                // Text(snapshot.data![index]['name'])
-                              ]),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
+                      child: SizedBox(
+                          height: height * 0.35,
+                          width: 220,
+                          child: RawScrollbar(
+                              thumbColor: const Color.fromARGB(255, 88, 163, 219),
+                              // shape: const StadiumBorder(side: BorderSide(color: Colors.brown, width: 3.0)),
+                              thickness: 5,
+                              radius: const Radius.circular(5),
+                              thumbVisibility: true,
+                              controller: childrenScrollController,
+                              child: ListView.builder(
+                                  physics: const PageScrollPhysics(),
+                                  controller: childrenScrollController,
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  itemCount: snapshot.data?.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    return Center(
+                                        child: Stack(children: [
+                                      Material(
+                                          color: Colors.transparent,
+                                          child: TextButton.icon(
+                                              label: const Text(''),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                openHistoryChild(snapshot.data![index]['id']);
+                                              },
+                                              icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                                Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                                Text(snapshot.data![index]['name'],
+                                                    style: const TextStyle(shadows: <Shadow>[
+                                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                    ], fontFamily: 'waytosun', color: Colors.white),
+                                                    textAlign: TextAlign.center)
+                                              ])))
+                                    ]));
+                                  }))));
                 } else {
                   return const Center(child: CircularProgressIndicator());
                 }
-              }),
-        ],
-      ),
-    );
+              })
+        ]));
   }
 
   void choosingChild(StateSetter setState, AsyncSnapshot<List<Map<String, dynamic>>> snapshot, int index) {
@@ -609,121 +621,103 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   Container parentFullNameWidget(StateSetter setState) {
+    var height = MediaQuery.of(context).size.height;
     return Container(
-      color: Colors.transparent,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+        color: Colors.transparent,
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
           FutureBuilder(
               future: DatabaseHandler.selectParent(),
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 if (snapshot.hasData) {
                   return Center(
-                    child: SizedBox(
-                      height: 60,
-                      width: 220,
-                      child: Center(
-                        child: Stack(children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: TextButton.icon(
-                              label: const Text(''),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                openParentName();
-                              },
-                              icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                Image.asset('assets/home/btn-big-blue.png', height: 40),
-                                Text(parentName,
-                                    style: const TextStyle(shadows: <Shadow>[
-                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                    ], fontFamily: 'waytosun', color: Colors.white),
-                                    textAlign: TextAlign.center)
-                              ]),
-                            ),
-                          ),
-                        ]),
-                      ),
-                    ),
-                  );
+                      child: SizedBox(
+                          height: height * 0.075,
+                          width: 220,
+                          child: Center(
+                              child: Stack(children: [
+                            Material(
+                                color: Colors.transparent,
+                                child: TextButton.icon(
+                                    label: const Text(''),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      openParentName();
+                                    },
+                                    icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                      Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                      Text(parentName,
+                                          style: const TextStyle(shadows: <Shadow>[
+                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                          ], fontFamily: 'waytosun', color: Colors.white),
+                                          textAlign: TextAlign.center)
+                                    ])))
+                          ]))));
                 } else {
                   return const Center(child: CircularProgressIndicator());
                 }
-              }),
-        ],
-      ),
-    );
+              })
+        ]));
   }
 
   Container parentEmailWidget(StateSetter setState) {
+    var height = MediaQuery.of(context).size.height;
     return Container(
-      color: Colors.transparent,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+        color: Colors.transparent,
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
           FutureBuilder(
               future: DatabaseHandler.selectParent(),
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 if (snapshot.hasData) {
                   return Center(
-                    child: SizedBox(
-                      height: 60,
-                      width: 220,
-                      child: Center(
-                        child: Stack(children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: TextButton.icon(
-                              label: const Text(''),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                openParentEmail();
-                              },
-                              icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                Image.asset('assets/home/btn-big-blue.png', height: 40),
-                                Text(parentEmail,
-                                    style: const TextStyle(shadows: <Shadow>[
-                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                    ], fontFamily: 'waytosun', color: Colors.white),
-                                    textAlign: TextAlign.center)
-                              ]),
-                            ),
-                          ),
-                        ]),
-                      ),
-                    ),
-                  );
+                      child: SizedBox(
+                          height: height * 0.075,
+                          width: 220,
+                          child: Center(
+                              child: Stack(children: [
+                            Material(
+                                color: Colors.transparent,
+                                child: TextButton.icon(
+                                    label: const Text(''),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      openParentEmail();
+                                    },
+                                    icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                      Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                      Text(parentEmail,
+                                          style: const TextStyle(shadows: <Shadow>[
+                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                          ], fontFamily: 'waytosun', color: Colors.white),
+                                          textAlign: TextAlign.center)
+                                    ])))
+                          ]))));
                 } else {
                   return const Center(child: CircularProgressIndicator());
                 }
-              }),
-        ],
-      ),
-    );
+              })
+        ]));
   }
 
-  Future openChooseChild(context) => showDialog(
-        context: context,
-        builder: (context) => MultiProvider(
-          providers: [ChangeNotifierProvider(create: (context) => ChildrenProvider())],
-          builder: (context, child) => BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Dialog(
-              backgroundColor: Colors.transparent,
-              child: Center(
-                child: Stack(children: [
-                  Image.asset('assets/home/bg-choose-child.png'),
-                  SizedBox(height: 375, child: childrenList(setState)),
-                ]),
-              ),
-            ),
-          ),
-        ),
-      );
+  // Future openChooseChild(context) {
+  //   var height = MediaQuery.of(context).size.height;
+  //   return showDialog(
+  //       context: context,
+  //       builder: (context) => MultiProvider(
+  //           providers: [ChangeNotifierProvider(create: (context) => ChildrenProvider())],
+  //           builder: (context, child) => BackdropFilter(
+  //               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+  //               child: Dialog(
+  //                   backgroundColor: Colors.transparent,
+  //                   child: Center(
+  //                       child: Stack(children: [
+  //                     Image.asset('assets/home/bg-choose-child.png'),
+  //                     SizedBox(height: height * 0.47, child: childrenList(setState)),
+  //                   ]))))));
+  // }
 
   Future openAddChild(context, childrenProvider) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     return showDialog(
       context: context,
       builder: (context) => BackdropFilter(
@@ -733,15 +727,15 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
           backgroundColor: Colors.transparent,
           child: SizedBox(
             // height: 300,
-            width: 500,
+            // width: 500,
             child: Form(
               key: _key,
               child: Stack(children: [
-                Image.asset('assets/home/bg-add-child.png', height: 300),
+                Image.asset('assets/home/bg-add-child.png', height: height * 0.375),
                 Positioned(
                   bottom: 120,
                   left: 65,
-                  width: 200,
+                  width: width * 0.45,
                   child: Center(
                     child: SizedBox(
                       width: 160,
@@ -765,12 +759,20 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       color: Colors.transparent,
                       child: TextButton.icon(
                         label: const Text(''),
-                        onPressed: () {
-                          childrenProvider.insertDatabase(newChildController.text, 0);
+                        onPressed: () async {
+                          Child newchild = await childrenProvider.insertDatabase(newChildController.text, 0);
                           newChildController.clear();
+                          setState(() {
+                            selectedChildId = newchild.id.toString();
+                            selectedChild = newchild.name;
+                            selectedChildBalance = newchild.balance.toString();
+                            selectedChildRfid = newchild.rfid.toString();
+                            setDisgits(selectedChildBalance);
+                          });
                           Navigator.of(context).pop();
+                          openSetRfidForChild(newchild.id.toString());
                         },
-                        icon: Image.asset('assets/home/btn-add.png', height: 50),
+                        icon: Image.asset('assets/home/btn-add.png', height: height * 0.06),
                       ),
                     ),
                   ),
@@ -784,6 +786,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   Future openAddToSaving(context) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
+    print(width);
     return showDialog(
       context: context,
       builder: (context) => BackdropFilter(
@@ -791,7 +796,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         child: Dialog(
           backgroundColor: Colors.transparent,
           child: Stack(children: [
-            Image.asset('assets/home/bg-add-to-saving.png', height: 300),
+            Image.asset('assets/home/bg-add-to-saving.png', height: height * 0.375),
             const PositionedCancelBtn(),
             Positioned(
               bottom: 5,
@@ -803,11 +808,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   label: const Text(''),
                   onPressed: () {
                     if (addSavingController.value.text.isEmpty || addSavingController.value.text == '0' || addSavingController.value.text == '') return;
-
                     Navigator.of(context).pop();
                     openTryAgain();
                   },
-                  icon: Image.asset('assets/home/btn-pay.png', height: 40),
+                  icon: Image.asset('assets/home/btn-pay.png', height: height * 0.2),
                 ),
               ),
             ),
@@ -817,10 +821,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
               height: 60,
               child: SizedBox(
                 width: 160,
-                child: TextField(
+                child: TextFormField(
                   autofocus: true,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+                  // keyboardType: TextInputType.number,
+                  // inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
                   style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
                   decoration: const InputDecoration(
                       prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white)),
@@ -855,80 +859,72 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   Future openSpend(context) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     return showDialog(
       context: context,
       builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          child: Stack(children: [
-            Image.asset('assets/home/bg-spend-dialog.png', height: 300),
-            const PositionedCancelBtn(),
-            Positioned(
-              bottom: 5,
-              left: 20,
-              height: 60,
-              child: Material(
-                color: Colors.transparent,
-                child: TextButton.icon(
-                  label: const Text(''),
-                  onPressed: () {
-                    if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
-                    Navigator.of(context).pop();
-                    openTryAgain();
-                  },
-                  icon: Image.asset('assets/home/btn-spend.png', height: 40),
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Dialog(
+              backgroundColor: Colors.transparent,
+              child: Stack(children: [
+                Image.asset('assets/home/bg-spend-dialog.png', height: height * 0.375),
+                const PositionedCancelBtn(),
+                Positioned(
+                  bottom: 5,
+                  left: width * 0.0453,
+                  height: height * 0.075,
+                  child: Material(
+                      color: Colors.transparent,
+                      child: TextButton.icon(
+                          label: const Text(''),
+                          onPressed: () {
+                            if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
+                            Navigator.of(context).pop();
+                            openTryAgain();
+                          },
+                          icon: Image.asset('assets/home/btn-spend.png', height: height * 0.2))),
                 ),
-              ),
-            ),
-            Positioned(
-              bottom: 112,
-              left: 130,
-              height: 60,
-              child: SizedBox(
-                width: 160,
-                child: TextField(
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                  style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                  decoration: const InputDecoration(
-                      prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white)),
-                      prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 14),
-                      hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                      labelStyle: TextStyle(fontFamily: 'waytosun'),
-                      border: InputBorder.none,
-                      hintText: '0'),
-                  controller: spendController,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 66,
-              left: 130,
-              height: 60,
-              child: SizedBox(
-                width: 160,
-                child: TextField(
-                  inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                  style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                  decoration: const InputDecoration(
-                      hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Buy Icecream..'),
-                  controller: noteController,
-                ),
-              ),
-            ),
-          ]),
-        ),
-      ),
+                Positioned(
+                    bottom: height * 0.14,
+                    left: width * 0.3,
+                    height: height * 0.075,
+                    child: SizedBox(
+                        width: width * 0.37,
+                        child: TextField(
+                          autofocus: true,
+                          // keyboardType: TextInputType.number,
+                          // inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+                          style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                          decoration: const InputDecoration(
+                              prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white)),
+                              prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 14),
+                              hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                              labelStyle: TextStyle(fontFamily: 'waytosun'),
+                              border: InputBorder.none,
+                              hintText: '0'),
+                          controller: spendController,
+                        ))),
+                Positioned(
+                    bottom: height * 0.0825,
+                    left: width * 0.3,
+                    height: height * 0.075,
+                    child: SizedBox(
+                        width: width * 0.37,
+                        child: TextField(
+                          inputFormatters: [LengthLimitingTextInputFormatter(15)],
+                          style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Buy Icecream..'),
+                          controller: noteController,
+                        ))),
+              ]))),
     );
   }
 
   void loadTouchId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      touchId = prefs.getBool('touchId') ?? false;
-    });
+    setState(() => touchId = prefs.getBool('touchId') ?? false);
   }
 
   _enableTouchId() async {
@@ -940,18 +936,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   loadMute() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      muted = prefs.getBool('muted') ?? false;
-    });
+    setState(() => muted = prefs.getBool('muted') ?? false);
     if (!muted) {
       backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3'));
     } else {
       backgroundAudio.setSource(AssetSource('sounds/background-soundtrack.mp3'));
     }
-
-    backgroundAudio.onPlayerComplete.listen((event) {
-      backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3'));
-    });
+    backgroundAudio.onPlayerComplete.listen((event) => backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3')));
     return muted;
   }
 
@@ -964,74 +955,70 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   Future openTryAgain() {
     var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 100.0),
-          child: Dialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
-            backgroundColor: Colors.transparent,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Center(child: Image.asset('assets/home/bg-try-again.png')),
-                Padding(
-                  padding: const EdgeInsets.all(60.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        const Text(
-                          'Attention!\n',
-                          style: TextStyle(fontFamily: 'abdomaster', fontSize: 20, color: Colors.black54),
-                        ),
-                        Text(
-                          textAlign: TextAlign.justify,
-                          'Dear Parent at this point please hand your phone to $selectedChild to precede. $selectedChild needs to tab the phone to the magic gold coin tag on top the Jooj Bank. “child name” have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
-                          style: const TextStyle(fontFamily: 'abdomaster', fontSize: 15, color: Colors.black54),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  width: width,
-                  bottom: 0,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: TextButton.icon(
-                      label: const Text(''),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        awaitReturnForRfidResult(context);
-                      },
-                      icon: Image.asset('assets/home/btn-ok.png', height: 60),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: height * 0.125),
+                child: Dialog(
+                    insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
+                    backgroundColor: Colors.transparent,
+                    child: Stack(fit: StackFit.expand, children: [
+                      Center(child: Image.asset('assets/home/bg-try-again.png')),
+                      Column(children: [
+                        SizedBox(height: height * 0.125),
+                        SizedBox(
+                            child: Padding(
+                                padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.05, width * 0.14, height * 0.025),
+                                child: SingleChildScrollView(
+                                    child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    const Text('Attention!\n', style: TextStyle(fontFamily: 'abdomaster', fontSize: 20, color: Colors.black54)),
+                                    Text(
+                                      textAlign: TextAlign.justify,
+                                      'Dear Parent at this point please hand your phone to $selectedChild to precede. $selectedChild needs to tab the phone to the magic gold coin tag on top the Jooj Bank. “child name” have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
+                                      style: const TextStyle(fontFamily: 'abdomaster', fontSize: 15, color: Colors.black54),
+                                    )
+                                  ],
+                                ))))
+                      ]),
+                      Positioned(
+                          width: width,
+                          bottom: height * 0.03125,
+                          child: Material(
+                              color: Colors.transparent,
+                              child: TextButton.icon(
+                                label: const Text(''),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  awaitReturnForRfidResult(context);
+                                },
+                                icon: Image.asset('assets/home/btn-ok.png', height: height * 0.075),
+                              )))
+                    ])))));
   }
 
-  void awaitReturnForRfidResult(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (context) => addSavingController.text != '' ? WaitingRfidAddPage(muted: muted) : WaitingRfidSpendPage(muted: muted))).then((rfidRead) {
+  void awaitReturnForRfidResult(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => addSavingController.text != '' ? const PinPage(type: 'add') : const PinPage(type: 'spend'))).then((rfidRead) {
+      // ? WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false))).then((rfidRead) {
+      print('rfidRead-------> $rfidRead');
       if (rfidRead == '') {
         openTryAgain();
-      } else {
-        setState(() {
-          firstDigit = secondDigit = thirdDigit = 0;
-        });
+      } else if (rfidRead == selectedChildRfid) {
+        setState(() => firstDigit = secondDigit = thirdDigit = 0);
         if (addSavingController.text != '') {
           addTobalance();
         } else {
           subtractBalance();
         }
+      } else {
+        addSavingController.clear();
+        spendController.clear();
+        noteController.clear();
+        openOops('ding');
       }
     });
   }
@@ -1056,8 +1043,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
     DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addSavingController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
-    _successController.reset();
-    _successController.animateTo(750);
     openSuccess('ding')
         .then((value) => setState(() {
               rainPlaying = true;
@@ -1065,11 +1050,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
               playSound('jackpot-h');
               setDisgits(accumulatedBalance.toString());
             }))
-        .then((value) => Future.delayed(const Duration(seconds: 4), () {
-              setState(() {
-                rainPlaying = false;
-              });
-            }));
+        .then((value) => Future.delayed(const Duration(seconds: 4), () => setState(() => rainPlaying = false)));
     addSavingController.clear();
     noteController.clear();
   }
@@ -1082,8 +1063,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
     DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
-    _successController.reset();
-    _successController.animateTo(750);
     openSuccess('ding')
         .then((value) => setState(() {
               flarePlaying = true;
@@ -1091,11 +1070,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
               playSound('coin-drop');
               setDisgits(accumulatedBalance.toString());
             }))
-        .then((value) => Future.delayed(const Duration(seconds: 4), () {
-              setState(() {
-                flarePlaying = false;
-              });
-            }));
+        .then((value) => Future.delayed(const Duration(seconds: 4), () => setState(() => flarePlaying = false)));
     spendController.clear();
     noteController.clear();
   }
@@ -1106,7 +1081,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     } else if (balance.length < 3) {
       balance = '0$balance';
     }
-    print('object $balance');
+    print('balance is $balance');
     setState(() {
       firstDigit = int.tryParse(balance[0]) ?? 0;
       secondDigit = int.tryParse(balance[1]) ?? 0;
@@ -1127,27 +1102,56 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   openSuccess(String sound) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
+    _successController.reset();
+
+    _successController.animateTo(750);
     playSound(sound);
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 100.0),
-          child: Dialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
-            backgroundColor: Colors.transparent,
-            child: Stack(
-              // fit: StackFit.expand,
-              alignment: AlignmentDirectional.center,
-              children: [
-                Lottie.asset('assets/animations/success.json', controller: _successController, height: 220),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: height * 0.125),
+                child: Dialog(
+                    insetPadding: EdgeInsets.symmetric(horizontal: width * 0.023, vertical: height * 0.1),
+                    backgroundColor: Colors.transparent,
+                    child: Column(
+                        // fit: StackFit.expand,
+                        // alignment: AlignmentDirectional.center,
+                        children: [
+                          Text('All done!',
+                              style: TextStyle(shadows: const <Shadow>[
+                                Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                              ], fontFamily: 'waytosun', color: Colors.blueGrey.shade100, fontSize: 25)),
+                          Lottie.asset('assets/animations/success.json', controller: _successController, height: height * 0.275)
+                        ])))));
+  }
+
+  openOops(String sound) {
+    _successController.reset();
+    _successController.animateTo(750);
+    playSound(sound);
+    return showDialog(
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 100.0),
+                child: Dialog(
+                    insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
+                    backgroundColor: Colors.transparent,
+                    child: Column(
+                        // fit: StackFit.expand,
+                        // alignment: AlignmentDirectional.center,
+                        children: [
+                          Text('Wrong tag!',
+                              style: TextStyle(shadows: const <Shadow>[
+                                Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                              ], fontFamily: 'waytosun', color: Colors.blueGrey.shade100, fontSize: 25)),
+                          Lottie.asset('assets/animations/oops.json', controller: _successController, height: 220),
+                        ])))));
   }
 
   Future<List<Parent>> loadParent() async {
@@ -1159,305 +1163,272 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   Future openParentName() {
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: SizedBox(
-            // height: 300,
-            width: 500,
-            child: Form(
-              key: _key,
-              child: Stack(children: [
-                Image.asset('assets/home/bg-parent-name.png', height: 300),
-                Positioned(
-                  bottom: 120,
-                  left: 65,
-                  width: 200,
-                  child: Center(
-                    child: SizedBox(
-                      width: 160,
-                      child: TextField(
-                        autofocus: true,
-                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                        decoration:
-                            InputDecoration(hintStyle: const TextStyle(fontFamily: 'waytosun'), labelStyle: const TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: parentName),
-                        controller: parentNameController,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 55,
-                  left: 45,
-                  width: 250,
-                  child: SizedBox(
-                    width: 250,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: TextButton.icon(
-                        label: const Text(''),
-                        onPressed: () {
-                          DatabaseHandler.update(
-                              'parents',
-                              {
-                                'fullName': parentNameController.text,
-                              },
-                              'id',
-                              '1');
-                          setState(() {
-                            parentName = parentNameController.text;
-                          });
-                          parentNameController.clear();
-                          Navigator.of(context).pop();
-                        },
-                        icon: Image.asset('assets/home/btn-add.png', height: 50),
-                      ),
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: SizedBox(
+                    // height: 300,
+                    width: width,
+                    child: Form(
+                        key: _key,
+                        child: Stack(children: [
+                          Image.asset('assets/home/bg-parent-name.png', height: height * 0.375),
+                          Positioned(
+                              bottom: height * 0.15,
+                              left: width * 0.15,
+                              width: width * 0.465,
+                              child: Center(
+                                  child: SizedBox(
+                                      width: width * 0.37,
+                                      child: TextField(
+                                        autofocus: true,
+                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                                        decoration: InputDecoration(
+                                            hintStyle: const TextStyle(fontFamily: 'waytosun'), labelStyle: const TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: parentName),
+                                        controller: parentNameController,
+                                      )))),
+                          Positioned(
+                              bottom: height * 0.0687,
+                              left: width * 0.105,
+                              width: width * 0.58,
+                              child: SizedBox(
+                                  width: width * 0.581,
+                                  child: Material(
+                                      color: Colors.transparent,
+                                      child: TextButton.icon(
+                                        label: const Text(''),
+                                        onPressed: () {
+                                          DatabaseHandler.update('parents', {'fullName': parentNameController.text}, 'id', '1');
+                                          setState(() => parentName = parentNameController.text);
+                                          parentNameController.clear();
+                                          Navigator.of(context).pop();
+                                        },
+                                        icon: Image.asset('assets/home/btn-add.png', height: height * 0.0625),
+                                      ))))
+                        ]))))));
   }
 
   Future openParentEmail() {
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: SizedBox(
-            // height: 300,
-            width: 500,
-            child: Form(
-              key: _key,
-              child: Stack(children: [
-                Image.asset('assets/home/bg-parent-email.png', height: 300),
-                Positioned(
-                  bottom: 120,
-                  left: 65,
-                  width: 200,
-                  child: Center(
-                    child: SizedBox(
-                      width: 160,
-                      child: TextField(
-                        autofocus: true,
-                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                        decoration:
-                            const InputDecoration(hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Enter Your email'),
-                        controller: parentEmailController,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 55,
-                  left: 45,
-                  width: 250,
-                  child: SizedBox(
-                    width: 250,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: TextButton.icon(
-                        label: const Text(''),
-                        onPressed: () {
-                          if (parentEmailController.text.isEmpty) return;
-                          if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(parentEmailController.text)) return;
-                          DatabaseHandler.update('parents', {'email': parentEmailController.text}, 'id', '1');
-                          emailChanged();
-                          setState(() {
-                            parentEmail = parentEmailController.text;
-                          });
-                          parentEmailController.clear();
-                          Navigator.of(context).pop();
-                        },
-                        icon: Image.asset('assets/home/btn-add.png', height: 50),
-                      ),
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: SizedBox(
+                    // height: 300,
+                    width: width,
+                    child: Form(
+                        key: _key,
+                        child: Stack(children: [
+                          Image.asset('assets/home/bg-parent-email.png', height: height * 0.375),
+                          Positioned(
+                              bottom: height * 0.15,
+                              left: width * 0.15,
+                              width: width * 0.465,
+                              child: Center(
+                                  child: SizedBox(
+                                      width: width * 0.372,
+                                      child: TextField(
+                                        autofocus: true,
+                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                                        decoration: const InputDecoration(
+                                            hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Enter Your email'),
+                                        controller: parentEmailController,
+                                      )))),
+                          Positioned(
+                              bottom: height * 0.06875,
+                              left: width * 0.11,
+                              width: width * 0.58,
+                              child: SizedBox(
+                                  width: width * 0.58,
+                                  child: Material(
+                                      color: Colors.transparent,
+                                      child: TextButton.icon(
+                                        label: const Text(''),
+                                        onPressed: () {
+                                          if (parentEmailController.text.isEmpty) return;
+                                          if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(parentEmailController.text)) return;
+                                          DatabaseHandler.update('parents', {'email': parentEmailController.text}, 'id', '1');
+                                          emailChanged();
+                                          setState(() => parentEmail = parentEmailController.text);
+                                          parentEmailController.clear();
+                                          Navigator.of(context).pop();
+                                        },
+                                        icon: Image.asset('assets/home/btn-add.png', height: height * 0.0625),
+                                      ))))
+                        ]))))));
   }
 
   Future openParentPassword() {
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: SizedBox(
-            // height: 300,
-            width: 500,
-            child: Form(
-              key: _key,
-              child: Stack(children: [
-                Image.asset('assets/home/bg-parent-password.png', height: 300),
-                Positioned(
-                  bottom: 120,
-                  left: 65,
-                  width: 200,
-                  child: Center(
-                    child: SizedBox(
-                      width: 160,
-                      child: TextField(
-                        obscureText: true,
-                        enableSuggestions: false,
-                        autocorrect: false,
-                        autofocus: true,
-                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                        decoration:
-                            const InputDecoration(hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'min 8 charecters'),
-                        controller: parentPasswordController,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 55,
-                  left: 45,
-                  width: 250,
-                  child: SizedBox(
-                    width: 250,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: TextButton.icon(
-                        label: const Text(''),
-                        onPressed: () {
-                          if (parentPasswordController.text.isEmpty) return;
-                          if (parentPasswordController.text.length < 8) return;
-                          passwordChanged();
-                          parentPasswordController.clear();
-                          Navigator.of(context).pop();
-                        },
-                        icon: Image.asset('assets/home/btn-add.png', height: 50),
-                      ),
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: SizedBox(
+                    // height: 300,
+                    width: width,
+                    child: Form(
+                        key: _key,
+                        child: Stack(children: [
+                          Image.asset('assets/home/bg-parent-password.png', height: height * 0.375),
+                          Positioned(
+                              bottom: height * 0.15,
+                              left: width * 0.15,
+                              width: width * 0.465,
+                              child: Center(
+                                  child: SizedBox(
+                                      width: width * 0.372,
+                                      child: TextField(
+                                        obscureText: true,
+                                        enableSuggestions: false,
+                                        autocorrect: false,
+                                        autofocus: true,
+                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                                        decoration: const InputDecoration(
+                                            hintStyle: TextStyle(fontFamily: 'waytosun'), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'min 8 charecters'),
+                                        controller: parentPasswordController,
+                                      )))),
+                          Positioned(
+                              bottom: height * 0.069,
+                              left: width * 0.11,
+                              width: width * 0.581,
+                              child: SizedBox(
+                                  width: width * 0.581,
+                                  child: Material(
+                                      color: Colors.transparent,
+                                      child: TextButton.icon(
+                                        label: const Text(''),
+                                        onPressed: () {
+                                          if (parentPasswordController.text.isEmpty) return;
+                                          if (parentPasswordController.text.length < 8) return;
+                                          passwordChanged();
+                                          parentPasswordController.clear();
+                                          Navigator.of(context).pop();
+                                        },
+                                        icon: Image.asset('assets/home/btn-add.png', height: height * 0.0625),
+                                      ))))
+                        ]))))));
   }
 
   Future openHistory(BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: SizedBox(
-            width: 500,
-            child: Stack(children: [
-              Center(child: Image.asset('assets/settings/bg-history.png')),
-              Center(child: childrenList(setState)),
-            ]),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: SizedBox(
+                    width: width,
+                    child: Stack(children: [
+                      Center(child: Image.asset('assets/settings/bg-history.png')),
+                      Center(child: childrenList(setState)),
+                      Positioned(
+                          left: 0,
+                          top: height * 0.1,
+                          child: InkWell(
+                              enableFeedback: false,
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () => Navigator.of(context).pop(),
+                              child: SizedBox(width: width * 0.14, height: height * 0.212))),
+                    ])))));
   }
 
   Future openHistoryChild(childId) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: SizedBox(
-            width: 500,
-            child: Stack(children: [
-              Center(child: Image.asset('assets/settings/bg-history.png')),
-              Center(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-                  const SizedBox(height: 50),
-                  Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
-                  FutureBuilder(
-                      future: DatabaseHandler.selectActionByChildId(childId.toString()),
-                      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                        if (snapshot.hasData) {
-                          return SizedBox(
-                            height: 280,
-                            child: RawScrollbar(
-                              thumbColor: const Color.fromARGB(255, 88, 163, 219),
-                              // shape: const StadiumBorder(side: BorderSide(color: Colors.brown, width: 3.0)),
-                              thickness: 5,
-                              radius: const Radius.circular(5),
-                              thumbVisibility: true,
-                              controller: historyScrollController,
-                              child: ListView.builder(
-                                  physics: const PageScrollPhysics(),
-                                  controller: historyScrollController,
-                                  scrollDirection: Axis.vertical,
-                                  shrinkWrap: true,
-                                  itemCount: snapshot.data?.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.fromLTRB(40.0, 0, 40, 5),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(15.0),
-                                            child: (snapshot.data![index]['value'] > 0)
-                                                ? Text("+${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
-                                                    style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.green))
-                                                : Text("-${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
-                                                    style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.red)),
-                                          ),
-                                          Column(
-                                            children: [
-                                              Text(snapshot.data![index]['note'], style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
-                                              Text((DateFormat.MMMd().add_jm().format(DateTime.parse(snapshot.data![index]['createdAt'])).toString()),
-                                                  style: TextStyle(fontFamily: 'waytosun', fontSize: 12, color: Colors.blueGrey.shade300)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                            ),
-                          );
-                        } else {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                      }),
-                ]),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: SizedBox(
+                    width: width,
+                    child: Stack(children: [
+                      Center(child: Image.asset('assets/settings/bg-history.png')),
+                      Center(
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                        SizedBox(height: height * 0.0625),
+                        Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
+                        FutureBuilder(
+                            future: DatabaseHandler.selectActionByChildId(childId.toString()),
+                            builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                              if (snapshot.hasData) {
+                                return SizedBox(
+                                    height: height * 0.35,
+                                    child: RawScrollbar(
+                                        thumbColor: const Color.fromARGB(255, 88, 163, 219),
+                                        // shape: const StadiumBorder(side: BorderSide(color: Colors.brown, width: 3.0)),
+                                        thickness: 5,
+                                        radius: const Radius.circular(5),
+                                        thumbVisibility: true,
+                                        controller: historyScrollController,
+                                        child: ListView.builder(
+                                            physics: const PageScrollPhysics(),
+                                            controller: historyScrollController,
+                                            scrollDirection: Axis.vertical,
+                                            shrinkWrap: true,
+                                            itemCount: snapshot.data?.length,
+                                            itemBuilder: (BuildContext context, int index) {
+                                              return Padding(
+                                                  padding: EdgeInsets.fromLTRB(width * 0.1, 0, width * 0.1, 5),
+                                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(15.0),
+                                                      child: (snapshot.data![index]['value'] > 0)
+                                                          ? Text("+${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
+                                                              style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.green))
+                                                          : Text("-${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
+                                                              style: const TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.red)),
+                                                    ),
+                                                    Column(children: [
+                                                      Text(snapshot.data![index]['note'], style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
+                                                      Text((DateFormat.MMMd().add_jm().format(DateTime.parse(snapshot.data![index]['createdAt'])).toString()),
+                                                          style: TextStyle(fontFamily: 'waytosun', fontSize: 12, color: Colors.blueGrey.shade300)),
+                                                    ])
+                                                  ]));
+                                            })));
+                              } else {
+                                return const Center(child: CircularProgressIndicator());
+                              }
+                            })
+                      ])),
+                      Positioned(
+                          left: 0,
+                          top: height * 0.10,
+                          child: InkWell(
+                              enableFeedback: false,
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () => Navigator.of(context).pop(),
+                              child: SizedBox(width: width * 0.14, height: height * 0.21))),
+                    ])))));
   }
 
   Future _userLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');
     isAuthenticated = (token == '') ? false : true;
-    print(token);
     return token == '' ? false : true;
   }
 
@@ -1476,7 +1447,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         errorSnackBar(context, responseMap.values.first);
       }
     } else {
-      errorSnackBar(context, 'enter all required fields');
+      errorSnackBar(context, 'Enter all required fields');
     }
   }
 
@@ -1495,60 +1466,101 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         errorSnackBar(context, responseMap.values.first);
       }
     } else {
-      errorSnackBar(context, 'enter all required fields');
+      errorSnackBar(context, 'Enter all required fields');
     }
   }
 
   openDeleteChild(context, childrenProvider, childIdToBeRemoved, String childNameToBeRemoved) {
+    var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          alignment: Alignment.topCenter,
-          backgroundColor: Colors.transparent,
-          child: Form(
-            key: _key,
-            child: Stack(children: [
-              Center(child: Image.asset('assets/home/bg-remove-child.png', height: 300)),
-              Center(
-                child: Text(
-                  childNameToBeRemoved,
-                  style: TextStyle(shadows: const <Shadow>[
-                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.white),
-                  ], fontFamily: 'waytosun', color: Colors.blueGrey.shade900, fontSize: 25),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 325),
-                    Material(
-                      color: Colors.transparent,
-                      child: TextButton.icon(
-                        label: const Text(''),
-                        onPressed: () {
-                          childrenProvider.deleteChildById(childIdToBeRemoved);
-                          loadChild().then((value) {
-                            setState(() {
-                              selectedChildId = value[0].id!.toString();
-                              selectedChild = value[0].name;
-                              selectedChildBalance = value[0].balance.toString();
-                            });
-                          });
-                          Navigator.of(context).pop();
-                        },
-                        icon: Image.asset('assets/settings/btn-yes.png', height: 50),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: Form(
+                    key: _key,
+                    child: Stack(children: [
+                      Center(child: Image.asset('assets/home/bg-remove-child.png', height: height * 0.375)),
+                      Center(
+                          child: Text(
+                        childNameToBeRemoved,
+                        style: TextStyle(shadows: const <Shadow>[
+                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.white),
+                        ], fontFamily: 'waytosun', color: Colors.blueGrey.shade900, fontSize: 25),
+                        textAlign: TextAlign.center,
+                      )),
+                      Center(
+                          child: Column(children: [
+                        SizedBox(height: height * 0.41),
+                        Material(
+                            color: Colors.transparent,
+                            child: TextButton.icon(
+                              label: const Text(''),
+                              onPressed: () {
+                                childrenProvider.deleteChildById(childIdToBeRemoved);
+                                loadChild().then((value) {
+                                  setState(() {
+                                    selectedChildId = value[0].id!.toString();
+                                    selectedChild = value[0].name;
+                                    selectedChildBalance = value[0].balance.toString();
+                                  });
+                                });
+                                Navigator.of(context).pop();
+                              },
+                              icon: Image.asset('assets/settings/btn-yes.png', height: height * 0.0625),
+                            ))
+                      ]))
+                    ])))));
+  }
+
+  openSetRfidForChild(String selectedChildId) {
+    var height = MediaQuery.of(context).size.height;
+    _tagRead();
+    return showDialog(
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: SafeArea(
+                child: FutureBuilder<bool>(
+                    future: NfcManager.instance.isAvailable(),
+                    builder: (context, ss) => ss.data != true
+                        ? Center(
+                            child: Text('Your phone does not support NFC',
+                                style: TextStyle(shadows: const <Shadow>[
+                                  Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                ], fontFamily: 'waytosun', color: Colors.blueGrey.shade100, fontSize: 25),
+                                textAlign: TextAlign.center))
+                        : Dialog(
+                            alignment: Alignment.center,
+                            backgroundColor: Colors.transparent,
+                            child: Form(
+                                key: _key,
+                                child: Column(children: [
+                                  SizedBox(height: height * 0.25, child: const Center(child: CircularProgressIndicator())),
+                                  Center(
+                                      child: Text(
+                                    'Please put your phone near\n $selectedChild RFID tag',
+                                    style: TextStyle(shadows: const <Shadow>[
+                                      Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                    ], fontFamily: 'waytosun', color: Colors.blueGrey.shade100, fontSize: 25),
+                                    textAlign: TextAlign.center,
+                                  ))
+                                ])))))));
+  }
+
+  void _tagRead() {
+    print('Start scanning..');
+    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
+      Uint8List identifier = Uint8List.fromList(tag.data['nfca']['identifier']);
+      selectedChildRfid = identifier.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
+      print('selectedChildRfid $selectedChildRfid');
+      NfcManager.instance.stopSession();
+      childrenProvider.updateRfidChildById(selectedChildId, selectedChildRfid);
+
+      Navigator.of(context).pop();
+    });
   }
 }

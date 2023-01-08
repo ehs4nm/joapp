@@ -5,11 +5,13 @@ import '../models/database_handler.dart';
 class Child {
   final int? id;
   String name;
+  String rfid;
   int balance;
 
   Child({
     this.id,
     required this.name,
+    required this.rfid,
     required this.balance,
   });
 
@@ -17,13 +19,14 @@ class Child {
     return {
       'id': id,
       'name': name,
+      'rfid': rfid,
       'balance': balance,
     };
   }
 
   @override
   String toString() {
-    return 'Child{id: $id, name: $name, balance: $balance}';
+    return 'Child{id: $id, name: $name, balance: $balance, rfid: $rfid}';
   }
 }
 
@@ -33,15 +36,15 @@ class ChildrenProvider with ChangeNotifier {
   List<Child> get item => _item;
 
   Future insertDatabase(String childName, int childBalance) async {
-    final newChild = Child(name: childName, balance: childBalance);
+    int childId = await DatabaseHandler.insert(DatabaseHandler.children, {
+      'name': childName,
+      'balance': childBalance,
+    });
+    final newChild = Child(id: childId, name: childName, balance: childBalance, rfid: '');
     _item.add(newChild);
 
-    await DatabaseHandler.insert(DatabaseHandler.children, {
-      'name': newChild.name,
-      'balance': newChild.balance,
-    });
-
     notifyListeners();
+    return newChild;
   }
 
 // show items
@@ -52,6 +55,7 @@ class ChildrenProvider with ChangeNotifier {
               id: item['id'],
               name: item['name'] ?? '',
               balance: item['balance'],
+              rfid: item['rfid'],
             ))
         .toList();
     notifyListeners();
@@ -86,6 +90,17 @@ class ChildrenProvider with ChangeNotifier {
     await db.update(
       DatabaseHandler.children,
       {'balance': childBalance},
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateRfidChildById(id, String rfid) async {
+    final db = await DatabaseHandler.database();
+    await db.update(
+      DatabaseHandler.children,
+      {'rfid': rfid},
       where: "id = ?",
       whereArgs: [id],
     );

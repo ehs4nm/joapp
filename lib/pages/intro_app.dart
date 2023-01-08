@@ -30,16 +30,18 @@ class IntroApp extends StatelessWidget {
   }
 
   Material introWidget(BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
+
     return Material(
         // type: MaterialType.transparency,
         child: Stack(alignment: Alignment.topCenter, children: [
-      // Image.asset('assets/home/bg-home-no-windfan.png', width: MediaQuery.of(context).size.width, fit: BoxFit.cover),
+      Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
       SizedBox(
         child: Stack(children: [
           Center(child: Image.asset('assets/home/bg-try-again.png', width: MediaQuery.of(context).size.width, fit: BoxFit.cover)),
           Center(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(60.0, 130, 60, 50),
+              padding: EdgeInsets.fromLTRB(60.0, height * 0.30, 60, 50),
               child: Column(
                 children: const [
                   Text('Important information for parents', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
@@ -54,7 +56,7 @@ class IntroApp extends StatelessWidget {
         ]),
       ),
       Positioned(
-        bottom: 50,
+        bottom: height * 0.15,
         child: TextButton(
             onPressed: () {
               setIntroIsWatched();

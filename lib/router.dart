@@ -41,7 +41,9 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: 'pin',
           builder: (BuildContext context, GoRouterState state) {
-            return const PinPage();
+            return const PinPage(
+              type: 'add',
+            );
           },
         ),
         GoRoute(

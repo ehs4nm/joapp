@@ -2,8 +2,11 @@
     package="com.example.jojo">
         <uses-permission android:name="android.permission.INTERNET"/>
         <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+        <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+        <uses-permission android:name="android.permission.NFC" />
+        <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
    <application
-        android:label="jojo"
+        android:label="Jooj Bank"
         android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">

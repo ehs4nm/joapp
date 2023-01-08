@@ -4,7 +4,11 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:jooj_bank/pages/home_page.dart';
+import 'package:jooj_bank/pages/pin_page.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:video_player/video_player.dart';
 
 class WaitingRfidAddPage extends StatefulWidget {
@@ -16,39 +20,32 @@ class WaitingRfidAddPage extends StatefulWidget {
 }
 
 class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
-  // bool muted = false;
-
+  bool touchId = false;
+  late Timer _timer;
   late VideoPlayerController _addController;
   @override
   void initState() {
     super.initState();
+
     _addController = VideoPlayerController.asset('assets/countdown/count-add.mp4')
       ..initialize().then((_) {
         setState(() {});
       })
       ..setVolume(1.0);
-    // ..setVolume(widget.muted ? 0.0 : 1.0);
+
     _playVideo();
+    _schedule();
   }
 
   void _playVideo() async {
-    String rfidRead = 'a';
-    // loadMute();
+    _tagRead();
     _addController.setVolume(1.0);
     _addController.play();
-    await Future.delayed(const Duration(seconds: 1));
-    Navigator.of(context).pop(rfidRead);
   }
-
-  // if (!rfidRead) openTryAgain(context);
-
-  // Navigator.push(
-  //   context,
-  //   MaterialPageRoute(builder: (context) => const NewHomePage()),
-  // );
 
   @override
   void dispose() {
+    _timer.cancel();
     _addController.dispose();
     super.dispose();
   }
@@ -56,18 +53,28 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: LayoutBuilder(
-        builder: (context, constraints) =>
-            _addController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_addController)) : Container(),
-      ),
-    );
+        backgroundColor: Colors.transparent,
+        body: LayoutBuilder(
+          builder: (context, constraints) =>
+              _addController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_addController)) : Container(),
+        ));
   }
 
-  // void loadMute() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     muted = prefs.getBool('muted') ?? false;
-  //   });
-  // }
+  void _schedule() {
+    _timer = Timer(const Duration(seconds: 10), () {
+      Navigator.of(context).pop();
+      Navigator.of(context).pop('');
+    });
+  }
+
+  String _tagRead() {
+    print('start nfc scan...........');
+    String childRfidRead = '';
+    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      Uint8List identifier = Uint8List.fromList(tag.data['nfca']['identifier']);
+      childRfidRead = identifier.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
+      NfcManager.instance.stopSession().then((value) => Navigator.of(context).pop()).then((value) => Navigator.of(context).pop(childRfidRead));
+    });
+    return childRfidRead;
+  }
 }

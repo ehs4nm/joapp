@@ -13,8 +13,10 @@ class AuthServices {
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}auth/register');
     http.Response response = await http.post(url, headers: headers, body: body);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    localStorage.setString('token', json.decode(response.body)['token']);
+    if (response.statusCode == 200) {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      localStorage.setString('token', json.decode(response.body)['token']);
+    }
 
     return response;
   }

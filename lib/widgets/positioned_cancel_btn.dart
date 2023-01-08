@@ -7,6 +7,7 @@ class PositionedCancelBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
     return Positioned(
       bottom: 5,
       right: 20,
@@ -16,7 +17,7 @@ class PositionedCancelBtn extends StatelessWidget {
         child: TextButton.icon(
           label: const Text(''),
           onPressed: () => {Navigator.of(context).pop()},
-          icon: Image.asset('assets/home/btn-cancel.png', height: 40),
+          icon: Image.asset('assets/home/btn-cancel.png', height: height * 0.2),
         ),
       ),
     );
