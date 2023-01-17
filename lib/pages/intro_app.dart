@@ -1,12 +1,21 @@
+import 'dart:io';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:jooj_bank/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wavenet/wavenet.dart';
 
-import 'home_page.dart';
+class IntroApp extends StatefulWidget {
+  const IntroApp({super.key});
 
-/// App widget class.
-class IntroApp extends StatelessWidget {
-  IntroApp({Key? key}) : super(key: key);
+  @override
+  State<IntroApp> createState() => _IntroAppState();
+}
 
+class _IntroAppState extends State<IntroApp> {
+  TextToSpeechService service = TextToSpeechService('AIzaSyDMgsjjPzHSkgaj3lPoY2LnHRgXMWe4TBY');
+  final voicePlayer = AudioPlayer();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   void setIntroIsWatched() async {
@@ -14,6 +23,12 @@ class IntroApp extends StatelessWidget {
     await prefs.setBool('introIsWatched', true).then((bool success) {
       return true;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    voicePlaying('Hi parents! Welcome to Jjooj bank! Please read this important message to go forward.');
   }
 
   @override
@@ -29,44 +44,56 @@ class IntroApp extends StatelessWidget {
                 )));
   }
 
+  getAudioPlayer(file) {
+    voicePlayer.play(DeviceFileSource(file));
+  }
+
+  voicePlaying(String text) async {
+    File file = await service.textToSpeech(
+      text: text,
+      voiceName: "en-US-Neural2-G",
+      languageCode: "en-US",
+      pitch: 1,
+      speakingRate: 1.25,
+      audioEncoding: "MP3",
+    );
+    getAudioPlayer(file.path);
+  }
+
   Material introWidget(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
 
     return Material(
         // type: MaterialType.transparency,
         child: Stack(alignment: Alignment.topCenter, children: [
       Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
       SizedBox(
-        child: Stack(children: [
-          Center(child: Image.asset('assets/home/bg-try-again.png', width: MediaQuery.of(context).size.width, fit: BoxFit.cover)),
-          Center(
+          child: Stack(children: [
+        Center(child: Image.asset('assets/home/bg-try-again.png', width: MediaQuery.of(context).size.width, fit: BoxFit.cover)),
+        Center(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(60.0, height * 0.30, 60, 50),
-              child: Column(
-                children: const [
-                  Text('Important information for parents', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.25, width * 0.14, height * 0.0625),
+                child: Column(children: const [
+                  Text('Important information for parents', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, fontWeight: FontWeight.w900)),
                   Text(
                       textAlign: TextAlign.justify,
                       '\nSign up for JooJ Bank app has to be done by parents. Also adding or withdrawing  pretending money has to be done by parents supervision by using their assigned four digit pin or fingerprint verification. The money that kids earn from their parents for doing chores are just pretending money but at the same time since we think JooJ Bank can be a very good and fun tools for kids to learn how to save and spend their money, therefore we decided to make transactions to be only verified by parents first.',
-                      style: TextStyle(fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-        ]),
-      ),
+                      style: TextStyle(fontFamily: 'lapsus', fontSize: 14)),
+                ])))
+      ])),
       Positioned(
-        bottom: height * 0.15,
+        bottom: height * 0.1,
         child: TextButton(
             onPressed: () {
               setIntroIsWatched();
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const NewHomePage()),
+                MaterialPageRoute(builder: (_) => const RegisterPage()),
                 // MaterialPageRoute(builder: (_) => const AuthGate()),
               );
             },
-            child: Image.asset('assets/home/btn-ok.png', width: 80)),
+            child: Image.asset('assets/home/btn-ok.png', width: width * 0.18)),
       )
     ]));
   }

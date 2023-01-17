@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:jooj_bank/pages/login_page.dart';
+import 'package:jooj_bank/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -29,7 +29,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
-    if (token != '') {
+
+    if (token != '' && token != null) {
       setState(() {
         isAuth = true;
       });
@@ -55,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => introIsWatched ? (isAuth ? const NewHomePage() : const LoginPage()) : IntroApp()),
+      MaterialPageRoute(builder: (context) => introIsWatched ? (isAuth ? const NewHomePage() : const RegisterPage()) : const IntroApp()),
     );
   }
 

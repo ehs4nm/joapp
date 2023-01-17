@@ -26,53 +26,43 @@ class _ContactPageState extends State<ContactPage> {
         children: [
           Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
           SizedBox(
-            child: SingleChildScrollView(
-              child: Stack(children: [
-                SizedBox(height: 650, child: Center(child: Image.asset('assets/home/bg-try-again.png', height: height * .6))),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(40, 0, 40, 0),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 150),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 15.0),
-                          child: Text('Send us what you think: ', style: TextStyle(fontSize: 23)),
-                        ),
-                        SizedBox(
-                          height: 300,
-                          width: 270,
-                          child: TextField(
-                            maxLength: 500,
-                            expands: true,
-                            keyboardType: TextInputType.multiline,
-                            minLines: null,
-                            maxLines: null,
-                            textAlign: TextAlign.center,
-                            autofocus: true,
-                            style: TextStyle(color: Colors.blueGrey.shade900, fontSize: 14),
-                            decoration: const InputDecoration(border: InputBorder.none, hintText: 'Description..'),
-                            onChanged: (value) => description = value,
-                          ),
-                        ),
-                      ],
-                    ),
+              child: SingleChildScrollView(
+                  child: Stack(children: [
+            SizedBox(height: height * 0.81, child: Center(child: Image.asset('assets/home/bg-try-again.png', height: height * .6))),
+            Padding(
+                padding: EdgeInsets.fromLTRB(width * 0.05, 20, width * 0.05, 0),
+                child: Center(
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                  SizedBox(height: height * 0.15),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 25.0),
+                    child: Text('Send us what you think:', style: TextStyle(fontSize: width * 0.05, fontWeight: FontWeight.w800, color: Colors.blueGrey.shade800)),
                   ),
-                ),
-                Positioned(
-                  width: width,
-                  height: 100,
-                  bottom: 80,
-                  child: IconButton(
-                    icon: Image.asset('assets/settings/btn-send.png', width: 100),
-                    onPressed: () => sendPressed(),
-                  ),
-                ),
-              ]),
-            ),
-          ),
+                  SizedBox(
+                      height: height * .375,
+                      width: width * .6,
+                      child: TextField(
+                        maxLength: (width * 0.9).ceil(),
+                        expands: true,
+                        keyboardType: TextInputType.multiline,
+                        minLines: null,
+                        maxLines: null,
+                        textAlign: TextAlign.left,
+                        autofocus: true,
+                        style: TextStyle(color: Colors.blueGrey.shade900, fontSize: width * 0.04),
+                        decoration: const InputDecoration(border: InputBorder.none, hintText: 'Description..'),
+                        onChanged: (value) => description = value,
+                      ))
+                ]))),
+            Positioned(
+                width: width,
+                height: height * 0.125,
+                bottom: width * 0.15,
+                child: IconButton(
+                  icon: Image.asset('assets/settings/btn-send.png', width: width * 0.23),
+                  onPressed: () => sendPressed(),
+                ))
+          ]))),
           Center(child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: isSending, child: const CircularProgressIndicator())),
         ],
       ),

@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
 
 class PositionedCancelBtn extends StatelessWidget {
-  const PositionedCancelBtn({
-    Key? key,
-  }) : super(key: key);
+  const PositionedCancelBtn({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     return Positioned(
-      bottom: 5,
-      right: 20,
-      height: 60,
-      child: Material(
-        color: Colors.transparent,
-        child: TextButton.icon(
-          label: const Text(''),
-          onPressed: () => {Navigator.of(context).pop()},
-          icon: Image.asset('assets/home/btn-cancel.png', height: height * 0.2),
-        ),
-      ),
-    );
+        bottom: 5,
+        right: width * 0.046,
+        height: height * 0.075,
+        child: Material(
+            color: Colors.transparent,
+            child: TextButton.icon(label: const Text(''), onPressed: () => {Navigator.of(context).pop()}, icon: Image.asset('assets/home/btn-cancel.png', width: width * 0.28))));
   }
 
   // Future<bool> _onWillPop() async {

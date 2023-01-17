@@ -8,8 +8,8 @@ import '/Services/globals.dart';
 import 'package:http/http.dart' as http;
 
 class AuthServices {
-  static Future<http.Response> register(String name, String email, String password) async {
-    Map data = {"name": name, "email": email, "password": password};
+  static Future<http.Response> register(String name, String childName, String email, String password) async {
+    Map data = {"name": name, "childName": childName, "email": email, "password": password};
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}auth/register');
     http.Response response = await http.post(url, headers: headers, body: body);
@@ -46,6 +46,84 @@ class AuthServices {
     return response;
   }
 
+  static Future<http.Response> sendAction(String childId, String value, String note, String createdAt) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+    print('\x1B[31m object \x1B[0m');
+    Map data = {"child_id": childId, "value": value, "note": note, "createdAt": createdAt, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}action');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> showAction() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}action/show');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> sendChild(String name, String balance, String rfid) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"name": name, "balance": balance, "rfid": rfid, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> updateChildRFID(String name, String rfid) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"name": name, "rfid": rfid, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child/edit');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> updateChildBalance(String name, String balance) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"name": name, "balance": balance, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child/updatechildbalance');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> showChild() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child/show');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
   static Future<http.Response> sendDescription(String description) async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');
@@ -53,7 +131,7 @@ class AuthServices {
     Map data = {"description": description, "token": token};
 
     var body = json.encode(data);
-    var url = Uri.parse('${baseURL}description');
+    var url = Uri.parse('${baseURL}contact');
     http.Response response = await http.post(url, headers: headers, body: body);
 
     return response;
@@ -78,6 +156,7 @@ class AuthServices {
     } on Exception catch (_) {
       print('Time out connection 😑');
     }
+
     return null;
   }
 
@@ -87,10 +166,12 @@ class AuthServices {
     Map data = {"token": token};
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}auth/logout');
+    localStorage.remove('token');
     http.Response response = await http.post(url, headers: headers, body: body);
 
     // var res = json.decode(response.body);
-    localStorage.remove('token');
+    token = localStorage.getString('token');
+    print('token    $token');
 
     // if (res['success']) {
     // }

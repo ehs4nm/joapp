@@ -22,6 +22,15 @@ class Parent {
     };
   }
 
+  factory Parent.fromJson(Map<String, dynamic> json) {
+    return Parent(
+      id: json['id'],
+      fullName: json['fullName'],
+      pin: json['pin'],
+      email: json['email'],
+    );
+  }
+
   // Implement toString to make it easier to see information about
   // each Child when using the print statement.
   @override
@@ -55,6 +64,16 @@ class BankAction {
       'note': note,
       'createdAt': createdAt,
     };
+  }
+
+  factory BankAction.fromJson(Map<String, dynamic> json) {
+    return BankAction(
+      id: json['id'],
+      childId: json['childId'],
+      action: json['action'],
+      note: json['note'],
+      createdAt: json['createdAt'],
+    );
   }
 
   // Implement toString to make it easier to see information about

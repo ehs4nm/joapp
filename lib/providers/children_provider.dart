@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:jooj_bank/Services/globals.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/database_handler.dart';
 
@@ -24,6 +29,15 @@ class Child {
     };
   }
 
+  factory Child.fromJson(Map<String, dynamic> json) {
+    return Child(
+      id: json['id'],
+      name: json['name'] ?? '',
+      rfid: json['rfid'] ?? '',
+      balance: int.parse(json['balance'] ?? '0'),
+    );
+  }
+
   @override
   String toString() {
     return 'Child{id: $id, name: $name, balance: $balance, rfid: $rfid}';
@@ -35,12 +49,13 @@ class ChildrenProvider with ChangeNotifier {
 
   List<Child> get item => _item;
 
-  Future insertDatabase(String childName, int childBalance) async {
+  Future insertDatabase(String childName, int childBalance, String rfid) async {
     int childId = await DatabaseHandler.insert(DatabaseHandler.children, {
       'name': childName,
       'balance': childBalance,
+      'rfid': rfid,
     });
-    final newChild = Child(id: childId, name: childName, balance: childBalance, rfid: '');
+    final newChild = Child(id: childId, name: childName, balance: childBalance, rfid: rfid);
     _item.add(newChild);
 
     notifyListeners();
@@ -61,10 +76,20 @@ class ChildrenProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteChildById(pickId) async {
-    await DatabaseHandler.deleteById(DatabaseHandler.children, 'id', pickId.toString());
-    print('delete_child');
+  Future<http.Response> deleteChildById(childIdToBeRemoved, childNameToBeRemoved) async {
+    await DatabaseHandler.deleteById(DatabaseHandler.children, 'id', childIdToBeRemoved.toString());
+
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"id": childIdToBeRemoved, "childName": childNameToBeRemoved, 'token': token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child/delete');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
     notifyListeners();
+    return response;
   }
 
   Future deleteTable() async {

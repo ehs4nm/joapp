@@ -21,15 +21,7 @@ class DatabaseHandler {
       'INSERT INTO parents (fullName, email, pin) VALUES("ehsan", "mohiti.ehsan@gmail.com","1234");',
       'INSERT INTO children (name, balance, rfid) VALUES("sara", 0,"1234");',
       'INSERT INTO actions (childId, value,note, createdAt) VALUES(1, 0,"note",datetime("now"));',
-      // '''CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, transaction INTEGER NULL, createdAt DATETIME
-      //       FOREIGN KEY (childId) REFERENCES children (id) ON DELETE NO ACTION ON UPDATE NO ACTION );''',
     ];
-
-    // const migrationScripts = [
-    //   'DROP TABLE parents;',
-    //   'DROP TABLE children;',
-    //   'DROP TABLE transactions;'
-    // ];
 
     return openDatabase(
       join(path, "jojobank_database.db"),
@@ -44,11 +36,7 @@ class DatabaseHandler {
       //     await db.execute(script);
       //   }
       // },
-      // onUpgrade: (Database db, int oldVersion, int newVersion) async {
-      //   for (var i = oldVersion - 1; i <= newVersion - 1; i++) {
-      //     await db.execute(migrationScripts[i]);
-      //   }
-      // },
+
       version: 1,
     );
   }
@@ -61,7 +49,7 @@ class DatabaseHandler {
   }
 
   // insert data
-  static Future insert(String table, Map<String, Object> data) async {
+  static Future insert(String table, Map<String, dynamic> data) async {
     final db = await DatabaseHandler.database();
     return db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -97,6 +85,12 @@ class DatabaseHandler {
     final db = await DatabaseHandler.database();
     return db.rawDelete('DELETE FROM $table');
   }
+
+  // //insert table
+  // static Future insertTable(String table) async {
+  //   final db = await DatabaseHandler.database();
+  //   return db.rawDelete('DELETE FROM $table');
+  // }
 
   //show item by id
   static Future selectChildById(String id) async {

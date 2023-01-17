@@ -257,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       // splashColor: Colors.transparent,
                       onPressed: () {
                         print('object');
-                        childrenProvider.insertDatabase(newChildController.text, 0);
+                        childrenProvider.insertDatabase(newChildController.text, 0, '');
 
                         // newChildController.clear();
 
