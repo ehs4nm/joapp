@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _playVideo() async {
     _controller.play();
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 6500));
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,

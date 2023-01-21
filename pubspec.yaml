@@ -53,6 +53,7 @@ dependencies:
   nfc_manager: ^3.1.1
   wavenet: ^2.0.5
   local_auth: ^2.1.3
+  another_flushbar: ^1.12.29
 
 dev_dependencies:
   flutter_test:
@@ -82,8 +83,13 @@ flutter:
     - assets/countdown/
     - assets/animations/
     - assets/settings/
-    - assets/sounds/
-    - assets/
+    - assets/icon.png
+    - assets/splash.mp4
+    - assets/splash.png
+    - assets/sounds/background.mp3
+    - assets/sounds/coindrop.wav
+    - assets/sounds/ding.wav
+    - assets/sounds/jackpot.wav
 
     # An image asset can refer to one or more resolution-specific "variants", see
     # https://flutter.dev/assets-and-images/#resolution-aware
@@ -122,9 +128,9 @@ flutter:
     #   fonts:
     #     - asset: assets/Fonts/airfool.ttf
 
-    - family: abdomaster
-      fonts:
-        - asset: assets/Fonts/abdomaster.ttf
+    # - family: abdomaster
+    #   fonts:
+    #     - asset: assets/Fonts/abdomaster.ttf
 
     - family: lapsus
       fonts:

@@ -1,22 +1,19 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-// import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/Services/auth_services.dart';
 import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/models/models.dart';
 import 'package:jooj_bank/pages/pin_page.dart';
-// import 'package:jooj_bank/pages/waiting_rfid_add.dart';
-// import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
-import 'package:jooj_bank/widgets/positioned_cancel_btn.dart';
+import 'package:jooj_bank/widgets/widgets.dart';
 import 'package:lottie/lottie.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +22,6 @@ import 'package:wavenet/wavenet.dart';
 import 'dart:ui' as ui;
 
 import '../providers/children_provider.dart';
-// import 'intro_app.dart';
 
 class NewHomePage extends StatefulWidget {
   const NewHomePage({super.key});
@@ -40,7 +36,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ScrollController childrenScrollController = ScrollController();
   ScrollController historyScrollController = ScrollController();
-  final player = AudioPlayer();
+  final coinDropPlayer = AudioPlayer();
+  final dingPlayer = AudioPlayer();
+  final jackPotPlayer = AudioPlayer();
   final voicePlayer = AudioPlayer();
   final backgroundAudio = AudioPlayer();
 
@@ -49,7 +47,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   late AnimationController _firstController;
   late AnimationController _secondController;
   late AnimationController _thirdController;
-  late AnimationController _successController;
   late TextEditingController spendController;
   late TextEditingController addSavingController;
   late TextEditingController noteController;
@@ -65,7 +62,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   late String selectedChild = 'Your child';
   late String selectedChildId = '1';
   late String selectedChildBalance = '000';
-  late String selectedChildRfid = '';
+
   late String parentName = 'Parent Name';
   late String parentEmail = 'Parent Email';
   late String parentPin = '1234';
@@ -93,6 +90,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _tagRead();
     WidgetsBinding.instance.addObserver(this);
     spendController = TextEditingController();
     addSavingController = TextEditingController();
@@ -102,7 +100,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     parentPasswordController = TextEditingController();
     newChildController = TextEditingController();
 
-    _successController = AnimationController(vsync: this, duration: const Duration(milliseconds: 750));
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))
       ..animateTo(4)
       ..repeat();
@@ -131,11 +128,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         selectedChildId = value[0].id!.toString();
         selectedChild = value[0].name;
         selectedChildBalance = value[0].balance.toString();
-        selectedChildRfid = value[0].rfid.toString();
         setDisgits(selectedChildBalance);
       });
-    }).then((value) {
-      if (selectedChildRfid == '') openSetRfidForChild(selectedChildId);
     }).then((value) {
       if (firstLoad) {
         voicePlaying(
@@ -151,10 +145,12 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     noteController.dispose();
     newChildController.dispose();
     backgroundAudio.dispose();
-    _successController.dispose();
+    jackPotPlayer.dispose();
+    voicePlayer.dispose();
+    coinDropPlayer.dispose();
+    dingPlayer.dispose();
     _controller.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    // _digitsController.dispose();
 
     super.dispose();
   }
@@ -175,7 +171,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         key: _scaffoldKey,
         type: MaterialType.transparency,
         child: Stack(alignment: Alignment.topCenter, children: [
-          Image.asset('assets/home/bg-home-no-windfan.png', height: height, fit: BoxFit.cover),
+          Image.asset('assets/home/bg-home-no-windfan.jpg', height: height, fit: BoxFit.cover),
           Column(children: [
             SizedBox(height: height * .25),
             SizedBox(
@@ -232,28 +228,37 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   SizedBox(height: height * 0.025),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceAround, crossAxisAlignment: CrossAxisAlignment.center, children: [
                     Image.asset('assets/countdown/dollar.png', height: height * 0.035),
-                    Lottie.asset('assets/countdown/$firstDigit.json', controller: _firstController, height: height * 0.035),
-                    Lottie.asset('assets/countdown/$secondDigit.json', controller: _secondController, height: height * 0.035),
+                    Visibility(
+                        maintainSize: false,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        visible: int.parse(selectedChildBalance) > 99,
+                        child: Lottie.asset('assets/countdown/$firstDigit.json', controller: _firstController, height: height * 0.035)),
+                    Visibility(
+                        maintainSize: false,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        visible: int.parse(selectedChildBalance) > 9,
+                        child: Lottie.asset('assets/countdown/$secondDigit.json', controller: _secondController, height: height * 0.035)),
                     Lottie.asset('assets/countdown/$thirdDigit.json', controller: _thirdController, height: height * 0.035),
                   ])
                 ])
               ])),
           Positioned(
-            top: height * 0.45,
+            bottom: height * 0.32,
             width: width * 0.5,
-            child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: rainPlaying, child: Image.asset('assets/animations/coin-rain.gif')),
+            child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: rainPlaying, child: Image.asset('assets/animations/coinrain.gif')),
           ),
           Positioned(
-            top: height * 0.4,
+            bottom: height * 0.32,
             width: width * 0.5,
-            child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: flarePlaying, child: Image.asset('assets/animations/star-rain.gif')),
+            child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: flarePlaying, child: Image.asset('assets/animations/starrain.gif')),
           ),
-          Positioned(top: height * 0.35, child: Lottie.asset('assets/animations/rainbow.json', controller: _controller, height: height * 0.2)),
+          Positioned(bottom: height * 0.43, child: Lottie.asset('assets/animations/rainbow.json', controller: _controller, height: height * 0.2)),
           Positioned(
               bottom: height * 0.05,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Material(
                       color: Colors.transparent,
@@ -269,114 +274,101 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   Future openSettings(context, childrenProvider) {
     var height = MediaQuery.of(context).size.height;
     return showDialog(
-      context: context,
-      builder: (context) => MultiProvider(
-        providers: [ChangeNotifierProvider(create: (context) => ChildrenProvider())],
-        builder: (context, child) => BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            child: Stack(children: [
-              Center(child: Image.asset('assets/settings/bg-settings.png')),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: height * 0.02),
-                    SizedBox(
-                        height: height * 0.05,
-                        width: 200,
-                        child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                  openProfile(context, childrenProvider);
-                                },
-                                child: Image.asset("assets/settings/btn-profile-settings.png")))),
-                    SizedBox(height: height * 0.02),
-                    SizedBox(
-                        height: height * 0.05,
-                        width: 200,
-                        child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.of(context).pop();
-                                openHistory(context);
-                              },
-                              child: Image.asset("assets/settings/btn-history-settings.png"),
-                            ))),
-                    SizedBox(height: height * 0.02),
-                    SizedBox(
-                        height: height * 0.05,
-                        width: 200,
-                        child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.of(context).pop();
-                                openAddChild(context, childrenProvider);
-                              },
-                              child: Image.asset("assets/settings/btn-add-child-settings.png"),
-                            ))),
-                    SizedBox(height: height * 0.02),
-                    SizedBox(
-                        height: height * 0.05,
-                        width: 200,
-                        child: Material(
-                          color: Colors.transparent,
+        context: context,
+        builder: (context) => MultiProvider(
+            providers: [ChangeNotifierProvider(create: (context) => ChildrenProvider())],
+            builder: (context, child) => BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Dialog(
+                    backgroundColor: Colors.transparent,
+                    child: Stack(children: [
+                      Center(child: Image.asset('assets/settings/bg-settings.png')),
+                      Center(
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                        SizedBox(height: height * 0.02),
+                        SizedBox(
+                            height: height * 0.05,
+                            width: 200,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      openProfile(context, childrenProvider);
+                                    },
+                                    child: Image.asset("assets/settings/btn-profile-settings.png")))),
+                        SizedBox(height: height * 0.02),
+                        SizedBox(
+                            height: height * 0.05,
+                            width: 200,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    openHistory(context);
+                                  },
+                                  child: Image.asset("assets/settings/btn-history-settings.png"),
+                                ))),
+                        SizedBox(height: height * 0.02),
+                        SizedBox(
+                            height: height * 0.05,
+                            width: 200,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    openAddChild(context, childrenProvider);
+                                  },
+                                  child: Image.asset("assets/settings/btn-add-child-settings.png"),
+                                ))),
+                        SizedBox(height: height * 0.02),
+                        SizedBox(
+                            height: height * 0.05,
+                            width: 200,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      context.push('/contact');
+                                    },
+                                    child: Image.asset("assets/settings/btn-contact-settings.png")))),
+                        SizedBox(height: height * 0.02),
+                        SizedBox(
+                            height: height * 0.05,
+                            width: 200,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                    onTap: () async {
+                                      try {
+                                        backgroundAudio.stop();
+                                        AuthServices.logout();
+                                        context.push('/login');
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                          content: const Text('Snackbar message'),
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                          margin: EdgeInsets.only(bottom: height - 100, right: 20, left: 20),
+                                        ));
+                                      }
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Image.asset("assets/settings/btn-logout-settings.png"))))
+                      ])),
+                      Positioned(
+                          left: 0,
+                          top: height * 0.10,
                           child: InkWell(
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.push('/contact');
-                            },
-                            child: Image.asset("assets/settings/btn-contact-settings.png"),
-                          ),
-                        )),
-                    SizedBox(height: height * 0.02),
-                    SizedBox(
-                        height: height * 0.05,
-                        width: 200,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () async {
-                              try {
-                                backgroundAudio.stop();
-                                AuthServices.logout();
-                                context.push('/login');
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: const Text('Snackbar message'),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                  margin: EdgeInsets.only(bottom: height - 100, right: 20, left: 20),
-                                ));
-                              }
-                              Navigator.of(context).pop();
-                            },
-                            child: Image.asset("assets/settings/btn-logout-settings.png"),
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-              Positioned(
-                  left: 0,
-                  top: height * 0.10,
-                  child: InkWell(
-                      enableFeedback: false,
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const SizedBox(width: 60.0, height: 200))),
-            ]),
-          ),
-        ),
-      ),
-    );
+                              enableFeedback: false,
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () => Navigator.of(context).pop(),
+                              child: const SizedBox(width: 60.0, height: 200))),
+                    ])))));
   }
 
   Future openProfile(context, childrenProvider) {
@@ -450,7 +442,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                                                     selectedChild = snapshot.data![index]['name'];
                                                                                     selectedChildId = snapshot.data![index]['id'].toString();
                                                                                     selectedChildBalance = snapshot.data![index]['balance'].toString();
-                                                                                    selectedChildRfid = snapshot.data![index]['rfid'].toString();
                                                                                     if (selectedChildBalance.length < 2) {
                                                                                       selectedChildBalance = "00$selectedChildBalance";
                                                                                     } else if (selectedChildBalance.length < 3) {
@@ -458,11 +449,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                                                     }
                                                                                     setDisgits(selectedChildBalance);
                                                                                   });
-                                                                                  if (selectedChildRfid == 'null' || selectedChildRfid == '') {
-                                                                                    openSetRfidForChild(selectedChildId);
-                                                                                  } else {
-                                                                                    Navigator.of(context).pop();
-                                                                                  }
+                                                                                  Navigator.of(context).pop();
                                                                                 },
                                                                                 child: Image.asset(
                                                                                     'assets/settings/btn-${int.parse(selectedChildId) == snapshot.data![index]['id'] ? "" : "un"}checked.png',
@@ -667,7 +654,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                       Text(parentEmail,
                                           style: TextStyle(shadows: const <Shadow>[
                                             Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                          ], fontFamily: 'waytosun', color: Colors.white, fontSize: width * 0.033),
+                                          ], fontFamily: 'waytosun', color: Colors.white, fontSize: width * 0.03),
                                           textAlign: TextAlign.center)
                                     ])))
                           ]))));
@@ -730,11 +717,9 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                             selectedChildId = newchild.id.toString();
                                             selectedChild = newchild.name;
                                             selectedChildBalance = '0';
-                                            selectedChildRfid = '';
                                             setDisgits(selectedChildBalance);
                                           });
                                           newChildController.clear();
-                                          openSetRfidForChild(newchild.id.toString());
                                         },
                                         icon: Image.asset('assets/home/btn-add.png', height: height * 0.06),
                                       ))))
@@ -754,7 +739,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                   Image.asset('assets/home/bg-add-to-saving.png', height: height * 0.375),
                   const PositionedCancelBtn(),
                   Positioned(
-                      bottom: 5,
+                      bottom: 10,
                       left: width * 0.046,
                       height: height * 0.075,
                       child: Material(
@@ -767,42 +752,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                 openHandItToChild();
                               },
                               icon: Image.asset('assets/home/btn-pay.png', width: width * 0.28)))),
-                  Positioned(
-                      bottom: height * 0.15,
-                      left: width * 0.3,
-                      height: height * 0.075,
-                      child: SizedBox(
-                          width: width * 0.37,
-                          child: TextFormField(
-                            autofocus: true,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                            style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                            decoration: const InputDecoration(
-                                prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white54)),
-                                prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 14),
-                                hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                                labelStyle: TextStyle(fontFamily: 'waytosun'),
-                                border: InputBorder.none,
-                                hintText: '0'),
-                            controller: addSavingController,
-                          ))),
-                  Positioned(
-                      bottom: height * 0.0825,
-                      left: width * 0.3,
-                      height: height * 0.08,
-                      child: SizedBox(
-                          width: width * 0.37,
-                          child: TextField(
-                            inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                            style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                            decoration: const InputDecoration(
-                                hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white30),
-                                labelStyle: TextStyle(fontFamily: 'waytosun'),
-                                border: InputBorder.none,
-                                hintText: 'Enter your note'),
-                            controller: noteController,
-                          )))
+                  NumberField(height: height, width: width, controller: addSavingController),
+                  NoteField(height: height, width: width, controller: noteController)
                 ]))));
   }
 
@@ -819,7 +770,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 Image.asset('assets/home/bg-spend-dialog.png', height: height * 0.375),
                 const PositionedCancelBtn(),
                 Positioned(
-                  bottom: 5,
+                  bottom: 10,
                   left: width * 0.046,
                   height: height * 0.075,
                   child: Material(
@@ -828,48 +779,22 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                           label: const Text(''),
                           onPressed: () {
                             if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
-                            Navigator.of(context).pop();
-                            openHandItToChild();
+                            if (int.parse(spendController.value.text) > int.parse(selectedChildBalance)) {
+                              Flushbar(
+                                backgroundColor: Colors.white,
+                                messageColor: Colors.blueGrey.shade700,
+                                message: 'Not enough money',
+                                duration: const Duration(seconds: 2),
+                              ).show(context);
+                            } else {
+                              Navigator.of(context).pop();
+                              openHandItToChild();
+                            }
                           },
                           icon: Image.asset('assets/home/btn-spend.png', width: width * 0.28))),
                 ),
-                Positioned(
-                    bottom: height * 0.15,
-                    left: width * 0.3,
-                    height: height * 0.075,
-                    child: SizedBox(
-                        width: width * 0.37,
-                        child: TextField(
-                          autofocus: true,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                          style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                          decoration: const InputDecoration(
-                              prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white54)),
-                              prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 14),
-                              hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                              labelStyle: TextStyle(fontFamily: 'waytosun'),
-                              border: InputBorder.none,
-                              hintText: '0'),
-                          controller: spendController,
-                        ))),
-                Positioned(
-                    bottom: height * 0.0825,
-                    left: width * 0.3,
-                    height: height * 0.08,
-                    child: SizedBox(
-                        width: width * 0.37,
-                        child: TextField(
-                          inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                          style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                          decoration: const InputDecoration(
-                            hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white30),
-                            labelStyle: TextStyle(fontFamily: 'waytosun'),
-                            border: InputBorder.none,
-                            hintText: 'Enter your note',
-                          ),
-                          controller: noteController,
-                        ))),
+                NumberField(height: height, width: width, controller: spendController),
+                NoteField(height: height, width: width, controller: noteController),
               ]))),
     );
   }
@@ -891,14 +816,14 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     setState(() {
       muted = prefs.getBool('muted') ?? false;
       firstLoad = prefs.getBool('firstLoad') ?? true;
-      prefs.setBool('firstLoad', false);
+      if (firstLoad == true) prefs.setBool('firstLoad', false);
     });
     if (!muted) {
-      backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3'));
+      backgroundAudio.play(AssetSource('sounds/background.mp3'));
     } else {
-      backgroundAudio.setSource(AssetSource('sounds/background-soundtrack.mp3'));
+      backgroundAudio.setSource(AssetSource('sounds/background.mp3'));
     }
-    backgroundAudio.onPlayerComplete.listen((event) => backgroundAudio.play(AssetSource('sounds/background-soundtrack.mp3')));
+    backgroundAudio.onPlayerComplete.listen((event) => backgroundAudio.play(AssetSource('sounds/background.mp3')));
     return muted;
   }
 
@@ -909,12 +834,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     setState(() => muted);
   }
 
-  Future openHandItToChild() {
-    if (firstLoad) {
-      voicePlaying("Parents at this point please hand the phone to $selectedChild and please read this important note.");
-    }
+  Future openHandItToChild() async {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
+    voicePlaying("Parents at this point please hand the phone to $selectedChild and please read this important note.");
+
     var selectedChildName = selectedChild[0].toUpperCase() + selectedChild.substring(1);
     return showDialog(
         context: context,
@@ -930,17 +854,18 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       Column(children: [
                         SizedBox(height: height * 0.1),
                         SizedBox(
+                            height: height * 0.6,
                             child: Padding(
-                                padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.02, width * 0.14, height * 0.025),
+                                padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.05, width * 0.14, 5),
                                 child: SingleChildScrollView(
                                     child: Column(
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
-                                    const Text('Attention!\n', style: TextStyle(fontFamily: 'lapsus', fontSize: 20, color: Colors.black87)),
+                                    Text('Attention!\n', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
                                     Text(
                                       textAlign: TextAlign.justify,
                                       'Dear Parent at this point please hand your phone to $selectedChildName to precede. $selectedChildName needs to tab the phone to the magic gold coin tag on top the Jooj Bank. $selectedChildName have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
-                                      style: const TextStyle(fontFamily: 'lapsus', fontSize: 15, color: Colors.black54),
+                                      style: const TextStyle(fontSize: 15, color: Colors.black54),
                                     )
                                   ],
                                 ))))
@@ -951,6 +876,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                           child: Material(
                               color: Colors.transparent,
                               child: TextButton.icon(
+                                style: const ButtonStyle(
+                                  splashFactory: NoSplash.splashFactory,
+                                  // overlayColor: MaterialStateColor.resolveWith((states) => Colors.transparent),
+                                ),
                                 label: const Text(''),
                                 onPressed: () {
                                   Navigator.of(context).pop();
@@ -1024,28 +953,23 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
 
   void awaitReturnForRfidResult(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(builder: (context) => addSavingController.text != '' ? const PinPage(type: 'add') : const PinPage(type: 'spend'))).then((rfidRead) {
-      // ? WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false))).then((rfidRead) {
-      print('rfidRead-------> $rfidRead');
-      if (rfidRead == '') {
-        openTryAgin();
-      } else if (rfidRead == selectedChildRfid) {
-        setState(() => firstDigit = secondDigit = thirdDigit = 0);
-        if (addSavingController.text != '') {
+      switch (rfidRead) {
+        case 'add':
+          setState(() => firstDigit = secondDigit = thirdDigit = 0);
           addTobalance();
-        } else {
+          addSavingController.clear();
+          break;
+        case 'spend':
+          setState(() => firstDigit = secondDigit = thirdDigit = 9);
           subtractBalance();
-        }
-      } else {
-        addSavingController.clear();
-        spendController.clear();
-        noteController.clear();
-        openTryAgin();
+          spendController.clear();
+          break;
+        default:
+          openTryAgin();
+          break;
       }
+      noteController.clear();
     });
-  }
-
-  void playSound(String sound) {
-    player.play(AssetSource('sounds/$sound.wav'));
   }
 
   void muteBackgroundAudio() async {
@@ -1061,21 +985,16 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   }
 
   voicePlaying(String text) async {
-    try {
-      File file = await service
-          .textToSpeech(
-            text: text,
-            voiceName: "en-US-Neural2-G",
-            languageCode: "en-US",
-            pitch: 1,
-            speakingRate: 1,
-            audioEncoding: "MP3",
-          )
-          .catchError((error) => print('Wavenet service is unreachable!:  $error'));
-      getAudioPlayer(file.path);
-    } on FormatException {
-      print('Wavenet service is unreachable!');
-    }
+    backgroundAudio.setVolume(.1);
+    // try {
+    //   File file = await service
+    //       .textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3")
+    //       .catchError((error) => print('Wavenet service is unreachable!:  $error'));
+    //   getAudioPlayer(file.path);
+    // } on FormatException {
+    //   print('Wavenet service is unreachable!');
+    // }
+    backgroundAudio.setVolume(1);
   }
 
   void addTobalance() async {
@@ -1084,41 +1003,19 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
-    openSuccess('ding')
-            .then((value) => setState(() {
-                  rainPlaying = true;
-                  selectedChildBalance = accumulatedBalance.toString();
-                  playSound('jackpot-h');
-                  setDisgits(accumulatedBalance.toString());
-                }))
-            .then((value) => Future.delayed(const Duration(seconds: 5), () => setState(() => rainPlaying = false)))
-        // .then((value) => voicePlaying("Grate job! $selectedChild"))
-        ;
+    dingPlayer.play(AssetSource('sounds/ding.wav'));
+    coinDropPlayer.play(AssetSource('sounds/coindrop.wav'));
+    setState(() {
+      rainPlaying = true;
+      selectedChildBalance = accumulatedBalance.toString();
+      setDisgits(accumulatedBalance.toString());
+    });
+    Future.delayed(const Duration(seconds: 5), () => setState(() => rainPlaying = false)).then((value) => voicePlaying("Grate job $selectedChild!!"));
 
-    Navigator.of(context).pop();
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addSavingController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, addSavingController.text, noteController.text, DateTime.now().toString());
-    await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
+
     addSavingController.clear();
     noteController.clear();
-  }
-
-  openSuccess(String sound) {
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-    _successController.reset();
-    _successController.animateTo(750);
-    playSound(sound);
-    return showDialog(
-        context: context,
-        builder: (context) => BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: height * 0.125),
-                child: Dialog(
-                    insetPadding: EdgeInsets.symmetric(horizontal: width * 0.023, vertical: height * 0.1),
-                    backgroundColor: Colors.transparent,
-                    child: Center(child: Lottie.asset('assets/animations/success.json', controller: _successController, height: height * 0.275))))));
   }
 
   void subtractBalance() async {
@@ -1127,19 +1024,17 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
-    openSuccess('ding')
-        .then((value) => setState(() {
-              flarePlaying = true;
-              selectedChildBalance = accumulatedBalance.toString();
-              playSound('coin-drop');
-              setDisgits(accumulatedBalance.toString());
-            }))
-        .then((value) => Future.delayed(const Duration(seconds: 4), () => setState(() => flarePlaying = false)))
-        .then((value) => voicePlaying("Awesome! $selectedChild"));
-    Navigator.of(context).pop();
+    dingPlayer.play(AssetSource('sounds/ding.wav'));
+    jackPotPlayer.play(AssetSource('sounds/jackpot.wav'));
+    setState(() {
+      flarePlaying = true;
+      selectedChildBalance = accumulatedBalance.toString();
+      setDisgits(accumulatedBalance.toString());
+    });
+
+    Future.delayed(const Duration(seconds: 4), () => setState(() => flarePlaying = false)).then((value) => voicePlaying("Awesome $selectedChild!!"));
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, spendController.text, noteController.text, DateTime.now().toString());
-    await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
+
     spendController.clear();
     noteController.clear();
   }
@@ -1156,15 +1051,15 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
       secondDigit = int.tryParse(balance[1]) ?? 0;
       thirdDigit = int.tryParse(balance[2]) ?? 0;
     });
-    _firstController = _digitsController[firstDigit];
+    _firstController = _digitsController[9];
     _firstController.reset();
     _firstController.animateTo(10);
 
-    _secondController = _digitsController[secondDigit];
+    _secondController = _digitsController[9];
     _secondController.reset();
     _secondController.animateTo(10);
 
-    _thirdController = _digitsController[thirdDigit];
+    _thirdController = _digitsController[9];
     _thirdController.reset();
     _thirdController.animateTo(10);
     return true;
@@ -1181,6 +1076,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   Future openParentName() {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
+    print(height);
     return showDialog(
         context: context,
         builder: (context) => BackdropFilter(
@@ -1195,44 +1091,26 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         key: _key,
                         child: Stack(children: [
                           Image.asset('assets/home/bg-parent-name.png', height: height * 0.375),
-                          Positioned(
-                              bottom: height * 0.145,
-                              left: width * 0.15,
-                              width: width * 0.465,
-                              child: Center(
-                                  child: SizedBox(
-                                      width: width * 0.37,
-                                      child: TextField(
-                                        autofocus: true,
-                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                                        decoration: InputDecoration(
-                                          hintStyle: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-                                          labelStyle: const TextStyle(fontFamily: 'waytosun'),
-                                          border: InputBorder.none,
-                                          hintText: parentName,
-                                        ),
-                                        controller: parentNameController,
-                                      )))),
+                          SettingsField(height: height, width: width, hintText: parentName, controller: parentNameController),
                           Positioned(
                               bottom: height * 0.0687,
-                              left: width * 0.105,
-                              width: width * 0.58,
-                              child: SizedBox(
-                                  width: width * 0.581,
-                                  child: Material(
-                                      color: Colors.transparent,
-                                      child: TextButton.icon(
-                                        label: const Text(''),
-                                        onPressed: () {
-                                          if (parentNameController.text.isNotEmpty) {
-                                            DatabaseHandler.update('parents', {'fullName': parentNameController.text}, 'id', '1');
-                                            setState(() => parentName = parentNameController.text);
-                                            parentNameController.clear();
-                                            Navigator.of(context).pop();
-                                          }
-                                        },
-                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.0625),
-                                      ))))
+                              // left: width * 0.105,
+                              width: width * 0.75,
+                              child: Center(
+                                child: InkWell(
+                                    enableFeedback: false,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () {
+                                      if (parentNameController.text.isNotEmpty) {
+                                        DatabaseHandler.update('parents', {'fullName': parentNameController.text}, 'id', '1');
+                                        setState(() => parentName = parentNameController.text);
+                                        parentNameController.clear();
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                    child: Image.asset('assets/home/btn-save.png', height: height * 0.05)),
+                              )),
                         ]))))));
   }
 
@@ -1253,28 +1131,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         key: _key,
                         child: Stack(children: [
                           Image.asset('assets/home/bg-parent-email.png', height: height * 0.375),
-                          Positioned(
-                              bottom: height * 0.15,
-                              left: width * 0.15,
-                              width: width * 0.465,
-                              child: Center(
-                                  child: SizedBox(
-                                      width: width * 0.372,
-                                      child: TextField(
-                                        autofocus: true,
-                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                                        decoration: const InputDecoration(
-                                          hintStyle: TextStyle(fontFamily: 'waytosun'),
-                                          labelStyle: TextStyle(fontFamily: 'waytosun'),
-                                          border: InputBorder.none,
-                                          hintText: 'Enter Your email',
-                                        ),
-                                        controller: parentEmailController,
-                                      )))),
+                          SettingsField(height: height, width: width, hintText: 'Enter Your email', controller: parentEmailController),
                           Positioned(
                               bottom: height * 0.06875,
-                              left: width * 0.11,
-                              width: width * 0.58,
+                              // left: width * 0.11,
+                              width: width * 0.75,
                               child: SizedBox(
                                   width: width * 0.58,
                                   child: Material(
@@ -1290,7 +1151,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                           parentEmailController.clear();
                                           Navigator.of(context).pop();
                                         },
-                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.0625),
+                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.05),
                                       ))))
                         ]))))));
   }
@@ -1312,31 +1173,11 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         key: _key,
                         child: Stack(children: [
                           Image.asset('assets/home/bg-parent-password.png', height: height * 0.375),
+                          PassField(height: height, width: width, controller: parentPasswordController),
                           Positioned(
-                              bottom: height * 0.15,
-                              left: width * 0.15,
-                              width: width * 0.465,
-                              child: Center(
-                                  child: SizedBox(
-                                      width: width * 0.372,
-                                      child: TextField(
-                                        obscureText: true,
-                                        enableSuggestions: false,
-                                        autocorrect: false,
-                                        autofocus: true,
-                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                                        decoration: const InputDecoration(
-                                          hintStyle: TextStyle(fontFamily: 'waytosun'),
-                                          labelStyle: TextStyle(fontFamily: 'waytosun'),
-                                          border: InputBorder.none,
-                                          hintText: 'min 8 charecters',
-                                        ),
-                                        controller: parentPasswordController,
-                                      )))),
-                          Positioned(
-                              bottom: height * 0.069,
-                              left: width * 0.11,
-                              width: width * 0.581,
+                              bottom: height * 0.06875,
+                              // left: width * 0.11,
+                              width: width * 0.75,
                               child: SizedBox(
                                   width: width * 0.581,
                                   child: Material(
@@ -1350,7 +1191,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                           parentPasswordController.clear();
                                           Navigator.of(context).pop();
                                         },
-                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.0625),
+                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.05),
                                       ))))
                         ]))))));
   }
@@ -1398,21 +1239,14 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       Center(child: Image.asset('assets/settings/bg-history.png')),
                       Center(
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-                        SizedBox(height: height * 0.0625),
-                        Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
+                        SizedBox(height: height * 0.08),
+                        // Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
                         FutureBuilder(
                             future: DatabaseHandler.selectActionByChildId(childId.toString()),
                             builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                               if (snapshot.hasData) {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                                  child: Text('Nothing yet!'),
-                                );
-                              }
-
-                              if (snapshot.hasData) {
                                 return SizedBox(
-                                    height: height * 0.35,
+                                    height: height * 0.43,
                                     child: RawScrollbar(
                                         thumbColor: const Color.fromARGB(255, 88, 163, 219),
                                         thickness: 5,
@@ -1420,7 +1254,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                         thumbVisibility: true,
                                         controller: historyScrollController,
                                         child: ListView.builder(
-                                            physics: const PageScrollPhysics(),
+                                            physics: const BouncingScrollPhysics(),
                                             controller: historyScrollController,
                                             scrollDirection: Axis.vertical,
                                             shrinkWrap: true,
@@ -1428,24 +1262,33 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                             itemBuilder: (BuildContext context, int index) {
                                               return Padding(
                                                   padding: EdgeInsets.fromLTRB(width * 0.1, 0, width * 0.1, 5),
-                                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                                  child: Stack(children: [
+                                                    Image.asset('assets/settings/concept-box.png', height: height * .17),
                                                     Padding(
-                                                      padding: const EdgeInsets.all(15.0),
-                                                      child: (snapshot.data![index]['value'] > 0)
-                                                          ? Text("+${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
-                                                              style: TextStyle(fontFamily: 'waytosun', fontSize: width * .07, color: Colors.green))
-                                                          : Text("-${snapshot.data![index]['value'].abs().toString().padLeft(2, '0')}",
-                                                              style: TextStyle(fontFamily: 'waytosun', fontSize: width * .07, color: Colors.red)),
-                                                    ),
-                                                    Column(children: [
-                                                      Text(snapshot.data![index]['note'], style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
-                                                      Text((DateFormat.MMMd().add_jm().format(DateTime.parse(snapshot.data![index]['createdAt'])).toString()),
-                                                          style: TextStyle(fontFamily: 'waytosun', fontSize: 12, color: Colors.blueGrey.shade300)),
-                                                    ])
+                                                        padding: const EdgeInsets.all(5.0),
+                                                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                                          Padding(
+                                                              padding: const EdgeInsets.all(5.0),
+                                                              child: Row(children: [
+                                                                Padding(
+                                                                    padding: const EdgeInsets.only(right: 2),
+                                                                    child: Image.asset('assets/settings/${(snapshot.data![index]['value'] > 0) ? 'plus' : 'minus'}.png', height: height * .05)),
+                                                                Stack(children: [
+                                                                  Image.asset('assets/settings/digit-box.png', height: height * .05),
+                                                                  Padding(
+                                                                      padding: const EdgeInsets.all(10),
+                                                                      child: Text(snapshot.data![index]['value'].abs().toString().padLeft(2, '0'),
+                                                                          style: TextStyle(fontFamily: 'waytosun', fontSize: width * .05, color: Colors.white))),
+                                                                ]),
+                                                                Text(snapshot.data![index]['note'] == "" ? '----' : snapshot.data![index]['note'],
+                                                                    style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
+                                                                Image.asset('assets/settings/btn-checked.png', height: height * .05)
+                                                              ])),
+                                                        ]))
                                                   ]));
                                             })));
                               } else {
-                                return const Center(child: CircularProgressIndicator());
+                                return const Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: Text('Nothing yet!'));
                               }
                             })
                       ])),
@@ -1457,7 +1300,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               splashColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () => Navigator.of(context).pop(),
-                              child: SizedBox(width: width * 0.14, height: height * 0.21))),
+                              child: SizedBox(width: width * 0.14, height: height * 0.15))),
                     ])))));
   }
 
@@ -1551,50 +1394,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                     ])))));
   }
 
-  openSetRfidForChild(String selectedChildId) {
-    var width = MediaQuery.of(context).size.width;
-    _tagRead();
-    return showDialog(
-        context: context,
-        builder: (context) => BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: SafeArea(
-                child: FutureBuilder<bool>(
-              future: NfcManager.instance.isAvailable(),
-              builder: (context, ss) => ss.data != true
-                  ? Center(
-                      child: Text('Your phone does not support NFC',
-                          style: TextStyle(
-                              shadows: const <Shadow>[Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black)], fontFamily: 'waytosun', color: Colors.blueGrey.shade100, fontSize: 20),
-                          textAlign: TextAlign.center))
-                  : Dialog(
-                      alignment: Alignment.center,
-                      backgroundColor: Colors.transparent,
-                      child: Stack(children: [
-                        Center(child: Image.asset('assets/settings/bg-rfid.png')),
-                        Center(
-                            child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: width * .07),
-                          child: Text(
-                            'Please put your phone near\n $selectedChild RFID tag',
-                            style: TextStyle(fontFamily: 'waytosun', color: Colors.blueGrey.shade800, fontSize: 20),
-                            textAlign: TextAlign.center,
-                          ),
-                        )),
-                        const CircularProgressIndicator()
-                      ])),
-            ))));
-  }
-
-  void _tagRead() {
+  void _tagRead() async {
+    if (await NfcManager.instance.isAvailable() == false) return;
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
-      Uint8List identifier = Uint8List.fromList(tag.data['nfca']['identifier']);
-      selectedChildRfid = identifier.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
-      NfcManager.instance.stopSession();
-      Navigator.of(context).pop();
-      childrenProvider.updateRfidChildById(selectedChildId, selectedChildRfid);
-      await AuthServices.updateChildRFID(selectedChild, selectedChildRfid);
+      print('ok');
     });
   }
 }

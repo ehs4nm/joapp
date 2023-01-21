@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/Pin_keyboard.dart';
@@ -29,7 +28,7 @@ class _SetPinPageState extends State<SetPinPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(children: [
-          Image.asset('assets/home/bg-clouds.png', height: height, width: width, fit: BoxFit.cover),
+          Image.asset('assets/home/bg-clouds.jpg', height: height, width: width, fit: BoxFit.cover),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -7,6 +7,7 @@ const Map<String, String> headers = {"Content-Type": "application/json"};
 errorSnackBar(BuildContext context, String text) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     backgroundColor: Colors.white,
+    // ignore: avoid_unnecessary_containers
     content: Container(
       // padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Text(text, style: TextStyle(color: Colors.blueGrey.shade900)),

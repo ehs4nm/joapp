@@ -24,7 +24,7 @@ class _ContactPageState extends State<ContactPage> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
+          Image.asset('assets/home/bg-clouds.jpg', height: height, fit: BoxFit.cover),
           SizedBox(
               child: SingleChildScrollView(
                   child: Stack(children: [

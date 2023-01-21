@@ -79,7 +79,7 @@ class _PinPageState extends State<PinPage> {
       _authorized = message;
       if (_authorized == 'yes') {
         // Navigator.of(context, rootNavigator: true).pop();
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
       }
     });
   }
@@ -87,14 +87,14 @@ class _PinPageState extends State<PinPage> {
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
+    // var width = MediaQuery.of(context).size.width;
     return WillPopScope(
-      onWillPop: () async => false,
+      onWillPop: () async => true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
+            Image.asset('assets/home/bg-clouds.jpg', height: height, fit: BoxFit.cover),
             Stack(children: [
               if (_supportState == _SupportState.unknown)
                 const CircularProgressIndicator()
@@ -136,7 +136,7 @@ class _PinPageState extends State<PinPage> {
                       },
                       onConfirm: (pin) {
                         if (pinCode == pin) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
                           // Navigator.of(context, rootNavigator: true).pop();
 
                         } else {

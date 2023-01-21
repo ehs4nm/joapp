@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -167,14 +166,13 @@ class AuthServices {
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}auth/logout');
     localStorage.remove('token');
+    // ignore: unused_local_variable
     http.Response response = await http.post(url, headers: headers, body: body);
 
     // var res = json.decode(response.body);
     token = localStorage.getString('token');
     print('token    $token');
 
-    // if (res['success']) {
-    // }
     return null;
   }
 }

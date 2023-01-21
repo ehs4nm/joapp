@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
         onWillPop: () async => false,
         child: Scaffold(
             body: Stack(children: [
-          Image.asset('assets/home/bg-clouds.png', height: height, width: width, fit: BoxFit.cover),
+          Image.asset('assets/home/bg-clouds.jpg', height: height, width: width, fit: BoxFit.cover),
           Padding(
               padding: const EdgeInsets.fromLTRB(40, 30, 40, 40),
               child: Center(
@@ -110,9 +110,10 @@ class _LoginPageState extends State<LoginPage> {
 
         Map responseMap = jsonDecode(response.body);
         if (response.statusCode == 200) {
+          setState(() => waiting = true);
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
           extractActions();
           extractChildren();
-          // Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
         } else {
           errorSnackBar(context, responseMap.values.first);
         }
@@ -142,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
             await DatabaseHandler.insert('actions', actions[i].toMap());
           }
         }
-        await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
+        // await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
       } else {
         errorSnackBar(context, responseMap.values.first);
       }

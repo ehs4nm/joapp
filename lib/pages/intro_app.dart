@@ -28,7 +28,7 @@ class _IntroAppState extends State<IntroApp> {
   @override
   void initState() {
     super.initState();
-    voicePlaying('Hi parents! Welcome to Jjooj bank! Please read this important message to go forward.');
+    voicePlaying('Hi Parents!! Welcome to Jjooj bank!! Please read this important message to go forward.');
   }
 
   @override
@@ -49,14 +49,7 @@ class _IntroAppState extends State<IntroApp> {
   }
 
   voicePlaying(String text) async {
-    File file = await service.textToSpeech(
-      text: text,
-      voiceName: "en-US-Neural2-G",
-      languageCode: "en-US",
-      pitch: 1,
-      speakingRate: 1.25,
-      audioEncoding: "MP3",
-    );
+    File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1.25, audioEncoding: "MP3");
     getAudioPlayer(file.path);
   }
 
@@ -67,19 +60,20 @@ class _IntroAppState extends State<IntroApp> {
     return Material(
         // type: MaterialType.transparency,
         child: Stack(alignment: Alignment.topCenter, children: [
-      Image.asset('assets/home/bg-clouds.png', height: height, fit: BoxFit.cover),
+      Image.asset('assets/home/bg-clouds.jpg', height: height, fit: BoxFit.cover),
       SizedBox(
           child: Stack(children: [
         Center(child: Image.asset('assets/home/bg-try-again.png', width: MediaQuery.of(context).size.width, fit: BoxFit.cover)),
         Center(
             child: Padding(
                 padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.25, width * 0.14, height * 0.0625),
-                child: Column(children: const [
-                  Text('Important information for parents', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, fontWeight: FontWeight.w900)),
-                  Text(
-                      textAlign: TextAlign.justify,
+                child: Column(children: [
+                  Text('Important Information for Parents',
+                      style: TextStyle(fontFamily: 'lapsus', fontSize: 28, fontWeight: FontWeight.w900, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
+                  const Text(
+                      textAlign: TextAlign.left,
                       '\nSign up for JooJ Bank app has to be done by parents. Also adding or withdrawing  pretending money has to be done by parents supervision by using their assigned four digit pin or fingerprint verification. The money that kids earn from their parents for doing chores are just pretending money but at the same time since we think JooJ Bank can be a very good and fun tools for kids to learn how to save and spend their money, therefore we decided to make transactions to be only verified by parents first.',
-                      style: TextStyle(fontFamily: 'lapsus', fontSize: 14)),
+                      style: TextStyle(fontSize: 15, color: Colors.black54)),
                 ])))
       ])),
       Positioned(

@@ -1,20 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-import 'dart:ffi';
-import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:jooj_bank/pages/home_page.dart';
-import 'package:jooj_bank/pages/pin_page.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:video_player/video_player.dart';
 
 class WaitingRfidAddPage extends StatefulWidget {
   final bool muted;
 
-  WaitingRfidAddPage({super.key, required this.muted});
+  const WaitingRfidAddPage({super.key, required this.muted});
   @override
   State<WaitingRfidAddPage> createState() => _WaitingRfidAddPageState();
 }
@@ -68,13 +63,14 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
   }
 
   String _tagRead() {
-    print('start nfc scan...........');
-    String childRfidRead = '';
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      Uint8List identifier = Uint8List.fromList(tag.data['nfca']['identifier']);
-      childRfidRead = identifier.map((e) => e.toRadixString(16).padLeft(2, '0')).join(':');
-      NfcManager.instance.stopSession().then((value) => Navigator.of(context).pop()).then((value) => Navigator.of(context).pop(childRfidRead));
+      Navigator.of(context).pop();
+      Navigator.of(context).pop('add');
+      NfcManager.instance.stopSession();
+      NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+        print('im ok');
+      });
     });
-    return childRfidRead;
+    return 'add';
   }
 }

@@ -38,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Scaffold(
             body: SingleChildScrollView(
                 child: Stack(children: [
-          Image.asset('assets/home/bg-clouds.png', height: height, width: width, fit: BoxFit.cover),
+          Image.asset('assets/home/bg-clouds.jpg', height: height, width: width, fit: BoxFit.cover),
           Padding(
               padding: const EdgeInsets.fromLTRB(40, 30, 40, 40),
               child: Center(
@@ -150,7 +150,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     height: 70,
                     width: 300,
                     child: Stack(children: [
-                      MaterialButton(child: Image.asset('assets/home/${waiting ? 'btn-create-account-deactive.png' : 'btn-create-account.png'}', height: 50), onPressed: () => createAccountPressed()),
+                      Center(
+                          child: MaterialButton(
+                              child: Image.asset('assets/home/${waiting ? 'btn-create-account-deactive.png' : 'btn-create-account.png'}', height: 50), onPressed: () => createAccountPressed())),
                       Center(child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: waiting, child: const CircularProgressIndicator())),
                     ])),
                 SizedBox(
