@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
 import 'package:another_flushbar/flushbar.dart';
-import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
+// import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/Services/auth_services.dart';
@@ -23,13 +23,13 @@ import 'dart:ui' as ui;
 
 import '../providers/children_provider.dart';
 
-class NewHomePage extends StatefulWidget {
-  const NewHomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
   @override
-  State<NewHomePage> createState() => _NewHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
   TextToSpeechService service = TextToSpeechService('AIzaSyDMgsjjPzHSkgaj3lPoY2LnHRgXMWe4TBY');
   late AppLifecycleState appLifecycle;
 
@@ -59,6 +59,8 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   bool touchId = false;
   bool muted = false;
   bool firstLoad = false;
+  bool firstDigitvisibility = true;
+  bool secondDigitvisibility = true;
   late String selectedChild = 'Your child';
   late String selectedChildId = '1';
   late String selectedChildBalance = '000';
@@ -83,13 +85,18 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (state == AppLifecycleState.paused) {
       backgroundAudio.pause();
     } else {
-      if (!muted) backgroundAudio.resume();
+      if (!muted) backgroundAudio.play();
     }
   }
 
   @override
   void initState() {
     super.initState();
+    dingPlayer.setAudioSource(AudioSource.asset('assets/sounds/ding.wav'));
+    coinDropPlayer.setAudioSource(AudioSource.asset('assets/sounds/coindrop.wav'));
+    jackPotPlayer.setAudioSource(AudioSource.asset('assets/sounds/jackpot.wav'));
+    backgroundAudio.setAudioSource(AudioSource.asset('assets/sounds/background.mp3'));
+
     _tagRead();
     WidgetsBinding.instance.addObserver(this);
     spendController = TextEditingController();
@@ -128,12 +135,12 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
         selectedChildId = value[0].id!.toString();
         selectedChild = value[0].name;
         selectedChildBalance = value[0].balance.toString();
-        setDisgits(selectedChildBalance);
+        setDigits(selectedChildBalance, '000');
       });
-    }).then((value) {
+    }).then((value) async {
       if (firstLoad) {
-        voicePlaying(
-            """Welcome to Jjooj bank $selectedChild! Patents to add money to $selectedChild's Jjooj bank please press the plus sign and minus sign to let $selectedChild to withdraw money from the Jjooj bank.""");
+        await voicePlaying(
+            """Welcome to Jjooj bank $selectedChild! Parents to add money to $selectedChild's Jjooj bank please press the plus sign and minus sign to let $selectedChild to withdraw money from the Jjooj bank.""");
       }
     });
   }
@@ -232,15 +239,15 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                         maintainSize: false,
                         maintainAnimation: true,
                         maintainState: true,
-                        visible: int.parse(selectedChildBalance) > 99,
-                        child: Lottie.asset('assets/countdown/$firstDigit.json', controller: _firstController, height: height * 0.035)),
+                        visible: firstDigitvisibility,
+                        child: Lottie.asset('assets/countdown/999.json', controller: _firstController, height: height * 0.035)),
                     Visibility(
                         maintainSize: false,
                         maintainAnimation: true,
                         maintainState: true,
-                        visible: int.parse(selectedChildBalance) > 9,
-                        child: Lottie.asset('assets/countdown/$secondDigit.json', controller: _secondController, height: height * 0.035)),
-                    Lottie.asset('assets/countdown/$thirdDigit.json', controller: _thirdController, height: height * 0.035),
+                        visible: secondDigitvisibility,
+                        child: Lottie.asset('assets/countdown/888.json', controller: _secondController, height: height * 0.035)),
+                    Lottie.asset('assets/countdown/777.json', controller: _thirdController, height: height * 0.035),
                   ])
                 ])
               ])),
@@ -264,7 +271,12 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       color: Colors.transparent,
                       child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: IconButton(onPressed: () => openAddToSaving(context), icon: Image.asset('assets/home/btn-plus.png'), iconSize: width * 0.1))),
+                          child: IconButton(
+                              onPressed: () =>
+                                  // setDigits('178'),
+                                  openAddToSaving(context),
+                              icon: Image.asset('assets/home/btn-plus.png'),
+                              iconSize: width * 0.1))),
                   Material(color: Colors.transparent, child: IconButton(onPressed: () => {openSpend(context)}, icon: Image.asset('assets/home/btn-minus.png'), iconSize: width * 0.1)),
                 ],
               )),
@@ -346,6 +358,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                       try {
                                         backgroundAudio.stop();
                                         AuthServices.logout();
+                                        setIntroIsWatched();
                                         context.push('/login');
                                       } catch (e) {
                                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -447,7 +460,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                                                                     } else if (selectedChildBalance.length < 3) {
                                                                                       selectedChildBalance = "0$selectedChildBalance";
                                                                                     }
-                                                                                    setDisgits(selectedChildBalance);
+                                                                                    setDigits(selectedChildBalance, '000');
                                                                                   });
                                                                                   Navigator.of(context).pop();
                                                                                 },
@@ -525,7 +538,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               focusColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () => Navigator.of(context).pop(),
-                              child: const SizedBox(width: 60.0, height: 200.0)))
+                              child: const SizedBox(width: 60.0, height: 150.0)))
                     ])))));
   }
 
@@ -676,53 +689,34 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                 alignment: Alignment.topCenter,
                 backgroundColor: Colors.transparent,
                 child: SizedBox(
-                    // height: 300,
-                    // width: 500,
                     child: Form(
                         key: _key,
-                        child: Stack(children: [
+                        child: Stack(alignment: AlignmentDirectional.center, children: [
                           Image.asset('assets/home/bg-add-child.png', height: height * 0.375),
+                          SettingsField(height: height, width: width, controller: newChildController, hintText: 'Enter Your child name'),
                           Positioned(
-                              bottom: height * 0.145,
-                              left: width * 0.16,
-                              width: width * 0.45,
+                              bottom: height * .07,
+                              // width: width,
+                              // left: width * .17,
                               child: Center(
-                                  child: SizedBox(
-                                      width: width * 0.37,
-                                      child: TextField(
-                                        autofocus: true,
-                                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white70),
-                                        decoration: InputDecoration(
-                                            labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * 0.035),
-                                            border: InputBorder.none,
-                                            enabledBorder: InputBorder.none,
-                                            hintStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * 0.035, color: Colors.white54),
-                                            hintText: 'Enter Your child name'),
-                                        controller: newChildController,
-                                      )))),
-                          Positioned(
-                              bottom: height * 0.06,
-                              left: width * 0.1,
-                              width: width * 0.58,
-                              child: SizedBox(
-                                  width: width * 0.58,
-                                  child: Material(
-                                      color: Colors.transparent,
-                                      child: TextButton.icon(
-                                        label: const Text(''),
-                                        onPressed: () async {
-                                          Navigator.of(context).pop();
-                                          Child newchild = await childrenProvider.insertDatabase(newChildController.text, 0, '');
-                                          setState(() {
-                                            selectedChildId = newchild.id.toString();
-                                            selectedChild = newchild.name;
-                                            selectedChildBalance = '0';
-                                            setDisgits(selectedChildBalance);
-                                          });
-                                          newChildController.clear();
-                                        },
-                                        icon: Image.asset('assets/home/btn-add.png', height: height * 0.06),
-                                      ))))
+                                child: InkWell(
+                                    enableFeedback: false,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () async {
+                                      if (newChildController.text == '') return;
+                                      Navigator.of(context).pop();
+                                      Child newchild = await childrenProvider.insertDatabase(newChildController.text, 0, '');
+                                      setState(() {
+                                        selectedChildId = newchild.id.toString();
+                                        selectedChild = newchild.name;
+                                        selectedChildBalance = '0';
+                                        setDigits(selectedChildBalance, '000');
+                                      });
+                                      newChildController.clear();
+                                    },
+                                    child: Image.asset('assets/home/btn-add.png', height: height * 0.05)),
+                              ))
                         ]))))));
   }
 
@@ -735,25 +729,42 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Dialog(
                 backgroundColor: Colors.transparent,
-                child: Stack(children: [
+                child: Stack(alignment: AlignmentDirectional.center, children: [
                   Image.asset('assets/home/bg-add-to-saving.png', height: height * 0.375),
-                  const PositionedCancelBtn(),
-                  Positioned(
-                      bottom: 10,
-                      left: width * 0.046,
-                      height: height * 0.075,
-                      child: Material(
-                          color: Colors.transparent,
-                          child: TextButton.icon(
-                              label: const Text(''),
-                              onPressed: () {
-                                if (addSavingController.value.text.isEmpty || addSavingController.value.text == '0' || addSavingController.value.text == '') return;
-                                Navigator.of(context).pop();
-                                openHandItToChild();
-                              },
-                              icon: Image.asset('assets/home/btn-pay.png', width: width * 0.28)))),
                   NumberField(height: height, width: width, controller: addSavingController),
-                  NoteField(height: height, width: width, controller: noteController)
+                  NoteField(height: height, width: width, controller: noteController),
+                  Positioned(
+                      bottom: height * 0.015,
+                      height: height * 0.075,
+                      width: width * .7,
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            const PositionedCancelBtn(),
+                            InkWell(
+                                enableFeedback: false,
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  if (addSavingController.value.text.isEmpty || addSavingController.value.text == '0' || addSavingController.value.text == '') return;
+                                  if (int.parse(addSavingController.value.text) + int.parse(selectedChildBalance) > 999) {
+                                    Flushbar(
+                                      backgroundColor: Colors.blueGrey,
+                                      messageColor: Colors.white,
+                                      message: 'Too much money, exceeded \$999',
+                                      duration: const Duration(milliseconds: 1500),
+                                    ).show(context);
+                                    return;
+                                  }
+                                  Navigator.of(context).pop();
+                                  await openHandItToChild();
+                                },
+                                child: Image.asset('assets/home/btn-pay.png', height: height * 0.045)),
+                          ],
+                        ),
+                      ))
                 ]))));
   }
 
@@ -761,42 +772,44 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
     return showDialog(
-      context: context,
-      builder: (context) => BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Dialog(
-              backgroundColor: Colors.transparent,
-              child: Stack(children: [
-                Image.asset('assets/home/bg-spend-dialog.png', height: height * 0.375),
-                const PositionedCancelBtn(),
-                Positioned(
-                  bottom: 10,
-                  left: width * 0.046,
-                  height: height * 0.075,
-                  child: Material(
-                      color: Colors.transparent,
-                      child: TextButton.icon(
-                          label: const Text(''),
-                          onPressed: () {
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                backgroundColor: Colors.transparent,
+                child: Stack(children: [
+                  Image.asset('assets/home/bg-spend-dialog.png', height: height * 0.375),
+                  NumberField(height: height, width: width, controller: spendController),
+                  NoteField(height: height, width: width, controller: noteController),
+                  Positioned(
+                      bottom: height * 0.015,
+                      height: height * 0.075,
+                      width: width * .7,
+                      child: Center(
+                          child: Row(mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                        const PositionedCancelBtn(),
+                        InkWell(
+                          enableFeedback: false,
+                          splashColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
                             if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
                             if (int.parse(spendController.value.text) > int.parse(selectedChildBalance)) {
                               Flushbar(
-                                backgroundColor: Colors.white,
-                                messageColor: Colors.blueGrey.shade700,
+                                backgroundColor: Colors.blueGrey,
+                                messageColor: Colors.white,
                                 message: 'Not enough money',
-                                duration: const Duration(seconds: 2),
+                                duration: const Duration(milliseconds: 1500),
                               ).show(context);
                             } else {
                               Navigator.of(context).pop();
-                              openHandItToChild();
+                              await openHandItToChild();
                             }
                           },
-                          icon: Image.asset('assets/home/btn-spend.png', width: width * 0.28))),
-                ),
-                NumberField(height: height, width: width, controller: spendController),
-                NoteField(height: height, width: width, controller: noteController),
-              ]))),
-    );
+                          child: Image.asset('assets/home/btn-pay.png', height: height * 0.045),
+                        ),
+                      ])))
+                ]))));
   }
 
   void loadTouchId() async {
@@ -816,14 +829,14 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     setState(() {
       muted = prefs.getBool('muted') ?? false;
       firstLoad = prefs.getBool('firstLoad') ?? true;
-      if (firstLoad == true) prefs.setBool('firstLoad', false);
     });
+    if (firstLoad == true) prefs.setBool('firstLoad', false);
     if (!muted) {
-      backgroundAudio.play(AssetSource('sounds/background.mp3'));
+      backgroundAudio.setLoopMode(LoopMode.one);
+      backgroundAudio.play();
     } else {
-      backgroundAudio.setSource(AssetSource('sounds/background.mp3'));
+      backgroundAudio.pause();
     }
-    backgroundAudio.onPlayerComplete.listen((event) => backgroundAudio.play(AssetSource('sounds/background.mp3')));
     return muted;
   }
 
@@ -837,8 +850,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
   Future openHandItToChild() async {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    voicePlaying("Parents at this point please hand the phone to $selectedChild and please read this important note.");
-
+    await voicePlaying("Parents at this point please hand the phone to $selectedChild and please read this important note.");
     var selectedChildName = selectedChild[0].toUpperCase() + selectedChild.substring(1);
     return showDialog(
         context: context,
@@ -878,10 +890,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                               child: TextButton.icon(
                                 style: const ButtonStyle(
                                   splashFactory: NoSplash.splashFactory,
-                                  // overlayColor: MaterialStateColor.resolveWith((states) => Colors.transparent),
                                 ),
                                 label: const Text(''),
                                 onPressed: () {
+                                  voicePlayer.stop();
                                   Navigator.of(context).pop();
                                   awaitReturnForRfidResult(context);
                                 },
@@ -955,12 +967,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     Navigator.of(context).push(MaterialPageRoute(builder: (context) => addSavingController.text != '' ? const PinPage(type: 'add') : const PinPage(type: 'spend'))).then((rfidRead) {
       switch (rfidRead) {
         case 'add':
-          setState(() => firstDigit = secondDigit = thirdDigit = 0);
           addTobalance();
           addSavingController.clear();
           break;
         case 'spend':
-          setState(() => firstDigit = secondDigit = thirdDigit = 9);
           subtractBalance();
           spendController.clear();
           break;
@@ -976,16 +986,20 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (!muted) {
       await backgroundAudio.pause();
     } else {
-      await backgroundAudio.resume();
+      await backgroundAudio.play();
     }
   }
 
-  getAudioPlayer(file) {
-    voicePlayer.play(DeviceFileSource(file));
+  getAudioPlayer(filePath) {
+    voicePlayer.setAudioSource(filePath);
+    voicePlayer.play();
   }
 
   voicePlaying(String text) async {
-    backgroundAudio.setVolume(.1);
+    await backgroundAudio.setVolume(0.1);
+    voicePlayer.setAudioSource(AudioSource.asset('assets/sounds/akon.mp3'));
+    voicePlayer.play();
+    Future.delayed(const Duration(milliseconds: 5000)).then((value) => backgroundAudio.setVolume(1));
     // try {
     //   File file = await service
     //       .textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3")
@@ -994,7 +1008,6 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     // } on FormatException {
     //   print('Wavenet service is unreachable!');
     // }
-    backgroundAudio.setVolume(1);
   }
 
   void addTobalance() async {
@@ -1003,14 +1016,21 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
-    dingPlayer.play(AssetSource('sounds/ding.wav'));
-    coinDropPlayer.play(AssetSource('sounds/coindrop.wav'));
+    dingPlayer.seek(const Duration(seconds: 0));
+    coinDropPlayer.seek(const Duration(seconds: 0));
+    dingPlayer.play();
+    coinDropPlayer.play();
     setState(() {
       rainPlaying = true;
+      String lastSelectedChildBalance = selectedChildBalance;
       selectedChildBalance = accumulatedBalance.toString();
-      setDisgits(accumulatedBalance.toString());
+      if (int.parse(selectedChildBalance) > 99) firstDigitvisibility = true;
+      if (int.parse(selectedChildBalance) > 9) secondDigitvisibility = true;
+      setDigits(accumulatedBalance.toString(), lastSelectedChildBalance);
     });
-    Future.delayed(const Duration(seconds: 5), () => setState(() => rainPlaying = false)).then((value) => voicePlaying("Grate job $selectedChild!!"));
+    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => rainPlaying = false))
+        .then((value) async => await voicePlaying("Grate job $selectedChild!!"))
+        .then((value) => backgroundAudio.play());
 
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addSavingController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
@@ -1024,45 +1044,102 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
-    dingPlayer.play(AssetSource('sounds/ding.wav'));
-    jackPotPlayer.play(AssetSource('sounds/jackpot.wav'));
+    dingPlayer.seek(const Duration(seconds: 0));
+    jackPotPlayer.seek(const Duration(seconds: 0));
+    dingPlayer.play();
+    jackPotPlayer.play();
     setState(() {
       flarePlaying = true;
+      String lastSelectedChildBalance = selectedChildBalance;
       selectedChildBalance = accumulatedBalance.toString();
-      setDisgits(accumulatedBalance.toString());
+      if (int.parse(selectedChildBalance) > 99) firstDigitvisibility = true;
+      if (int.parse(selectedChildBalance) > 9) secondDigitvisibility = true;
+      setDigits(accumulatedBalance.toString(), lastSelectedChildBalance);
     });
 
-    Future.delayed(const Duration(seconds: 4), () => setState(() => flarePlaying = false)).then((value) => voicePlaying("Awesome $selectedChild!!"));
+    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => flarePlaying = false))
+        .then((value) async => await voicePlaying("Awesome $selectedChild!!"))
+        .then((value) => backgroundAudio.play());
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
     spendController.clear();
     noteController.clear();
   }
 
-  Future<bool> setDisgits(String balance) async {
-    if (balance.length < 2) {
-      balance = '00$balance';
-    } else if (balance.length < 3) {
-      balance = '0$balance';
-    }
-    print('balance is $balance');
-    setState(() {
-      firstDigit = int.tryParse(balance[0]) ?? 0;
-      secondDigit = int.tryParse(balance[1]) ?? 0;
-      thirdDigit = int.tryParse(balance[2]) ?? 0;
-    });
+  Future<bool> setDigits(String balance, String lastBalance) async {
+    List<double> numbersArray = [0, .12, .21, .3, .4, .5, .58, .67, .76, .86];
+
+    List<int> intBalance = digitsExtract(balance);
+    List<int> intLastBalance = digitsExtract(lastBalance);
+
+    firstDigit = intBalance[0];
+    secondDigit = intBalance[1];
+    thirdDigit = intBalance[2];
+
+    int lastFirstDigit = intLastBalance[0];
+    int lastSecondDigit = intLastBalance[1];
+    int lastThirdDigit = intLastBalance[2];
+
     _firstController = _digitsController[9];
-    _firstController.reset();
-    _firstController.animateTo(10);
+    _secondController = _digitsController[8];
+    _thirdController = _digitsController[7];
 
-    _secondController = _digitsController[9];
-    _secondController.reset();
-    _secondController.animateTo(10);
+    if (int.parse(lastBalance) > 99) {
+      print(lastBalance);
+      firstDigitvisibility = true;
+    } else {
+      print('lastBalance $lastBalance');
 
-    _thirdController = _digitsController[9];
-    _thirdController.reset();
-    _thirdController.animateTo(10);
+      firstDigitvisibility = false;
+    }
+    if (int.parse(lastBalance) > 9) {
+      print('lastBalance123 $lastBalance');
+
+      secondDigitvisibility = true;
+    } else {
+      print('lastBalance1234 $lastBalance');
+
+      secondDigitvisibility = false;
+    }
+
+    print('++++ $firstDigit $lastFirstDigit');
+    // if (firstDigit == lastFirstDigit) {
+    //   _firstController
+    //       .animateTo(numbersArray[9])
+    //       .then((_) => _firstController.animateTo(numbersArray[firstDigit]))
+    //       .then((_) => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false);
+    // } else {
+    _firstController.animateTo(numbersArray[firstDigit]).then((_) => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false);
+    // }
+
+    print('++++ $secondDigit $lastSecondDigit');
+    // if (secondDigit == lastSecondDigit) {
+    //   _firstController
+    //       .animateTo(numbersArray[9])
+    //       .then((_) => _secondController.animateTo(numbersArray[secondDigit]))
+    //       .then((_) => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+    // } else {
+    _secondController.animateTo(numbersArray[secondDigit]).then((_) => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+    // }
+
+    print('++++ $thirdDigit $lastThirdDigit');
+    // if (thirdDigit == lastThirdDigit) {
+    //   _firstController.animateTo(numbersArray[9]).then((_) => _thirdController.animateTo(numbersArray[thirdDigit]));
+    // } else {
+    _thirdController.animateTo(numbersArray[thirdDigit]);
+    // }
+
+    print('++++++ $balance');
     return true;
+  }
+
+  List<int> digitsExtract(String number) {
+    if (number.length < 2) {
+      number = '00$number';
+    } else if (number.length < 3) {
+      number = '0$number';
+    }
+    return [int.tryParse(number[0])!, int.tryParse(number[1])!, int.tryParse(number[2])!];
   }
 
   Future<List<Parent>> loadParent() async {
@@ -1089,13 +1166,13 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                     width: width,
                     child: Form(
                         key: _key,
-                        child: Stack(children: [
+                        child: Stack(alignment: AlignmentDirectional.center, children: [
                           Image.asset('assets/home/bg-parent-name.png', height: height * 0.375),
                           SettingsField(height: height, width: width, hintText: parentName, controller: parentNameController),
                           Positioned(
-                              bottom: height * 0.0687,
-                              // left: width * 0.105,
-                              width: width * 0.75,
+                              bottom: height * 0.07,
+                              // left: width * 0.18,
+                              // width: width * 0.75,
                               child: Center(
                                 child: InkWell(
                                     enableFeedback: false,
@@ -1129,30 +1206,29 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                     width: width,
                     child: Form(
                         key: _key,
-                        child: Stack(children: [
+                        child: Stack(alignment: AlignmentDirectional.center, children: [
                           Image.asset('assets/home/bg-parent-email.png', height: height * 0.375),
                           SettingsField(height: height, width: width, hintText: 'Enter Your email', controller: parentEmailController),
                           Positioned(
-                              bottom: height * 0.06875,
-                              // left: width * 0.11,
-                              width: width * 0.75,
-                              child: SizedBox(
-                                  width: width * 0.58,
-                                  child: Material(
-                                      color: Colors.transparent,
-                                      child: TextButton.icon(
-                                        label: const Text(''),
-                                        onPressed: () {
-                                          if (parentEmailController.text.isEmpty) return;
-                                          if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(parentEmailController.text)) return;
-                                          DatabaseHandler.update('parents', {'email': parentEmailController.text}, 'id', '1');
-                                          emailChanged();
-                                          setState(() => parentEmail = parentEmailController.text);
-                                          parentEmailController.clear();
-                                          Navigator.of(context).pop();
-                                        },
-                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.05),
-                                      ))))
+                              bottom: height * 0.07,
+                              // left: width * 0.18,
+                              // width: width * 0.75,
+                              child: Center(
+                                child: InkWell(
+                                    enableFeedback: false,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () {
+                                      if (parentEmailController.text.isEmpty) return;
+                                      if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(parentEmailController.text)) return;
+                                      DatabaseHandler.update('parents', {'email': parentEmailController.text}, 'id', '1');
+                                      emailChanged();
+                                      setState(() => parentEmail = parentEmailController.text);
+                                      parentEmailController.clear();
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Image.asset('assets/home/btn-save.png', height: height * 0.05)),
+                              )),
                         ]))))));
   }
 
@@ -1171,28 +1247,27 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                     width: width,
                     child: Form(
                         key: _key,
-                        child: Stack(children: [
+                        child: Stack(alignment: AlignmentDirectional.center, children: [
                           Image.asset('assets/home/bg-parent-password.png', height: height * 0.375),
                           PassField(height: height, width: width, controller: parentPasswordController),
                           Positioned(
-                              bottom: height * 0.06875,
-                              // left: width * 0.11,
-                              width: width * 0.75,
-                              child: SizedBox(
-                                  width: width * 0.581,
-                                  child: Material(
-                                      color: Colors.transparent,
-                                      child: TextButton.icon(
-                                        label: const Text(''),
-                                        onPressed: () {
-                                          if (parentPasswordController.text.isEmpty) return;
-                                          if (parentPasswordController.text.length < 8) return;
-                                          passwordChanged();
-                                          parentPasswordController.clear();
-                                          Navigator.of(context).pop();
-                                        },
-                                        icon: Image.asset('assets/home/btn-save.png', height: height * 0.05),
-                                      ))))
+                              bottom: height * 0.07,
+                              // left: width * 0.18,
+                              // width: width * 0.75,
+                              child: Center(
+                                child: InkWell(
+                                    enableFeedback: false,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () {
+                                      if (parentPasswordController.text.isEmpty) return;
+                                      if (parentPasswordController.text.length < 8) return;
+                                      passwordChanged();
+                                      parentPasswordController.clear();
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Image.asset('assets/home/btn-save.png', height: height * 0.05)),
+                              )),
                         ]))))));
   }
 
@@ -1240,7 +1315,7 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                       Center(
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
                         SizedBox(height: height * 0.08),
-                        // Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colors.blueGrey.shade700)),
+                        // Text(selectedChild, style: TextStyle(fontFamily: 'waytosun', fontSize: 35, color: Colrs.blueGrey.shade700)),
                         FutureBuilder(
                             future: DatabaseHandler.selectActionByChildId(childId.toString()),
                             builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
@@ -1260,32 +1335,64 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
                                             shrinkWrap: true,
                                             itemCount: snapshot.data?.length,
                                             itemBuilder: (BuildContext context, int index) {
-                                              return Padding(
-                                                  padding: EdgeInsets.fromLTRB(width * 0.1, 0, width * 0.1, 5),
-                                                  child: Stack(children: [
-                                                    Image.asset('assets/settings/concept-box.png', height: height * .17),
-                                                    Padding(
-                                                        padding: const EdgeInsets.all(5.0),
-                                                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                                          Padding(
-                                                              padding: const EdgeInsets.all(5.0),
-                                                              child: Row(children: [
-                                                                Padding(
-                                                                    padding: const EdgeInsets.only(right: 2),
-                                                                    child: Image.asset('assets/settings/${(snapshot.data![index]['value'] > 0) ? 'plus' : 'minus'}.png', height: height * .05)),
-                                                                Stack(children: [
-                                                                  Image.asset('assets/settings/digit-box.png', height: height * .05),
-                                                                  Padding(
-                                                                      padding: const EdgeInsets.all(10),
-                                                                      child: Text(snapshot.data![index]['value'].abs().toString().padLeft(2, '0'),
-                                                                          style: TextStyle(fontFamily: 'waytosun', fontSize: width * .05, color: Colors.white))),
-                                                                ]),
-                                                                Text(snapshot.data![index]['note'] == "" ? '----' : snapshot.data![index]['note'],
-                                                                    style: TextStyle(fontFamily: 'waytosun', fontSize: 20, color: Colors.blueGrey.shade800)),
-                                                                Image.asset('assets/settings/btn-checked.png', height: height * .05)
-                                                              ])),
-                                                        ]))
-                                                  ]));
+                                              return SizedBox(
+                                                  height: height * .1,
+                                                  child: Padding(
+                                                      padding: EdgeInsets.fromLTRB(width * 0.1, 0, width * 0.1, 5),
+                                                      child: Stack(alignment: AlignmentDirectional.center, children: [
+                                                        Image.asset('assets/settings/concept-box.png', height: height * .17),
+                                                        Padding(
+                                                            padding: const EdgeInsets.all(8.0),
+                                                            child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                                                              Padding(
+                                                                  padding: const EdgeInsets.all(5.0),
+                                                                  child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                                                                    SizedBox(
+                                                                        height: height * .06,
+                                                                        width: width * .08,
+                                                                        child: Padding(
+                                                                            padding: const EdgeInsets.only(right: 5),
+                                                                            child:
+                                                                                Image.asset('assets/settings/${(snapshot.data![index]['value'] > 0) ? 'plus' : 'minus'}.png', height: height * .05))),
+                                                                    SizedBox(
+                                                                        // height: height * .07,
+                                                                        width: width * .15,
+                                                                        child: Padding(
+                                                                            padding: const EdgeInsets.only(right: 5),
+                                                                            child: Stack(children: [
+                                                                              Image.asset('assets/settings/digit-box.png', height: height * .05),
+                                                                              Padding(
+                                                                                  padding: EdgeInsets.all(width * .025),
+                                                                                  child: Text("\$${snapshot.data![index]['value'].abs().toString().padLeft(3, '0')}",
+                                                                                      style: TextStyle(
+                                                                                        fontFamily: 'waytosun',
+                                                                                        fontSize: width * .033,
+                                                                                        color: Colors.white,
+                                                                                        shadows: const <Shadow>[
+                                                                                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                                                        ],
+                                                                                      ))),
+                                                                            ]))),
+                                                                    SizedBox(
+                                                                        // height: height * .14,
+                                                                        width: width * .22,
+                                                                        child: SingleChildScrollView(
+                                                                          physics: const BouncingScrollPhysics(),
+                                                                          scrollDirection: Axis.horizontal,
+                                                                          child: Text(snapshot.data![index]['note'] == "" ? '----' : snapshot.data![index]['note'],
+                                                                              style: TextStyle(
+                                                                                  fontFamily: 'waytosun',
+                                                                                  fontSize: width * .033,
+                                                                                  color: const Color.fromRGBO(120, 68, 53, 1),
+                                                                                  overflow: TextOverflow.fade,
+                                                                                  shadows: const <Shadow>[
+                                                                                    Shadow(offset: Offset(0.0, 1.0), blurRadius: 4.0, color: Colors.white),
+                                                                                  ])),
+                                                                        )),
+                                                                    SizedBox(height: height * .14, width: width * .08, child: Image.asset('assets/settings/btn-checked.png', height: height * .03))
+                                                                  ]))
+                                                            ]))
+                                                      ])));
                                             })));
                               } else {
                                 return const Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: Text('Nothing yet!'));
@@ -1399,5 +1506,10 @@ class _NewHomePageState extends State<NewHomePage> with TickerProviderStateMixin
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
       print('ok');
     });
+  }
+
+  void setIntroIsWatched() async {
+    final SharedPreferences prefs = await _prefs;
+    await prefs.setBool('introIsWatched', false);
   }
 }

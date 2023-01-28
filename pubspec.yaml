@@ -36,7 +36,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  flip_panel: ^1.0.1
   video_player: ^2.4.8
   go_router: ^5.2.0
   provider: ^6.0.4
@@ -54,6 +53,7 @@ dependencies:
   wavenet: ^2.0.5
   local_auth: ^2.1.3
   another_flushbar: ^1.12.29
+  just_audio: ^0.9.31
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +89,7 @@ flutter:
     - assets/sounds/background.mp3
     - assets/sounds/coindrop.wav
     - assets/sounds/ding.wav
+    - assets/sounds/akon.mp3
     - assets/sounds/jackpot.wav
 
     # An image asset can refer to one or more resolution-specific "variants", see

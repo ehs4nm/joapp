@@ -1,14 +1,14 @@
 // ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
 
-import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/models/models.dart';
+import 'package:jooj_bank/pages/intro_app.dart';
 import 'package:jooj_bank/providers/children_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import '/Services/globals.dart';
 import 'package:http/http.dart' as http;
@@ -26,6 +26,14 @@ String _password = '';
 bool waiting = false;
 
 class _LoginPageState extends State<LoginPage> {
+  bool introIsWatched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadIntroIsWatched();
+  }
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
@@ -105,13 +113,14 @@ class _LoginPageState extends State<LoginPage> {
         http.Response? response = await AuthServices.login(_email, _password);
         if (response == null || response.statusCode == 500 || response.statusCode == 404) {
           errorSnackBar(context, 'Network connection error!');
+          setState(() => waiting = false);
           return;
         }
 
         Map responseMap = jsonDecode(response.body);
         if (response.statusCode == 200) {
           setState(() => waiting = true);
-          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => introIsWatched ? const HomePage() : const IntroApp()));
           extractActions();
           extractChildren();
         } else {
@@ -176,5 +185,10 @@ class _LoginPageState extends State<LoginPage> {
     } on Exception {
       print('Time out connection 😑');
     }
+  }
+
+  void loadIntroIsWatched() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    introIsWatched = prefs.getBool('introIsWatched') ?? false;
   }
 }

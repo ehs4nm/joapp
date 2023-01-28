@@ -6,15 +6,13 @@ class PositionedCancelBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    return Positioned(
-        bottom: 10,
-        right: width * 0.046,
-        height: height * 0.075,
-        child: Material(
-            color: Colors.transparent,
-            child: TextButton.icon(label: const Text(''), onPressed: () => {Navigator.of(context).pop()}, icon: Image.asset('assets/home/btn-cancel.png', width: width * 0.28))));
+    return InkWell(
+        enableFeedback: false,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        onTap: () => {Navigator.of(context).pop()},
+        child: Image.asset('assets/home/btn-cancel.png', height: height * 0.045));
   }
 }
 
@@ -33,18 +31,26 @@ class NoteField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-        bottom: height * 0.0825,
-        left: width * 0.3,
-        height: height * 0.08,
+        bottom: height * 0.1,
+        left: width * 0.28,
+        // height: height * 0.08,
         child: SizedBox(
-            width: width * 0.37,
-            child: TextField(
-              inputFormatters: [LengthLimitingTextInputFormatter(15)],
-              style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-              decoration: const InputDecoration(
-                  hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54), labelStyle: TextStyle(fontFamily: 'waytosun'), border: InputBorder.none, hintText: 'Enter your note'),
-              controller: controller,
-            )));
+            width: width * 0.5,
+            child: Stack(alignment: AlignmentDirectional.centerStart, children: [
+              Image.asset('assets/settings/note-field-bg.png', height: height * .04),
+              Padding(
+                  padding: const EdgeInsets.only(left: 9.0),
+                  child: TextField(
+                    inputFormatters: [LengthLimitingTextInputFormatter(15)],
+                    style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                    decoration: InputDecoration(
+                        hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54, fontSize: width * .035),
+                        labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * .035),
+                        border: InputBorder.none,
+                        hintText: 'Enter your note'),
+                    controller: controller,
+                  ))
+            ])));
   }
 }
 
@@ -63,25 +69,30 @@ class NumberField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-        bottom: height * 0.140,
-        left: width * 0.3,
-        height: height * 0.075,
+        bottom: height * 0.12,
+        left: width * 0.28,
+        // height: height * 0.075,
         child: SizedBox(
-            width: width * 0.37,
-            child: TextFormField(
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-              style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
-              decoration: const InputDecoration(
-                  prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white)),
-                  prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 14),
-                  hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54),
-                  labelStyle: TextStyle(fontFamily: 'waytosun'),
-                  border: InputBorder.none,
-                  hintText: '0'),
-              controller: controller,
-            )));
+            width: width * 0.24,
+            child: Stack(alignment: AlignmentDirectional.centerStart, children: [
+              Image.asset('assets/settings/number-field-bg.png', height: height * .12, width: width * .25),
+              Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: TextFormField(
+                    autofocus: true,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
+                    style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                    decoration: InputDecoration(
+                        prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white, fontSize: width * .035)),
+                        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 14),
+                        hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54, fontSize: width * .035),
+                        labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * .035),
+                        border: InputBorder.none,
+                        hintText: '0'),
+                    controller: controller,
+                  ))
+            ])));
   }
 }
 
@@ -102,12 +113,15 @@ class SettingsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-        bottom: height * 0.155,
-        left: width * 0.15,
+        bottom: height * 0.1,
+        // left: width * 0.15,
         width: width * 0.5,
-        child: Center(
-            child: SizedBox(
-                width: width * 0.37,
+        child: SizedBox(
+            width: width * 0.5,
+            child: Stack(alignment: AlignmentDirectional.center, children: [
+              Image.asset('assets/settings/field-bg.png', height: height * .15, width: width * .5),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
                 child: TextField(
                   autofocus: true,
                   style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
@@ -118,7 +132,9 @@ class SettingsField extends StatelessWidget {
                     hintText: hintText,
                   ),
                   controller: controller,
-                ))));
+                ),
+              ),
+            ])));
   }
 }
 
@@ -137,24 +153,29 @@ class PassField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-        bottom: height * 0.145,
-        left: width * 0.15,
+        bottom: height * 0.1,
+        // left: width * 0.15,
         width: width * 0.5,
         child: Center(
             child: SizedBox(
-                width: width * 0.372,
-                child: TextField(
-                  obscureText: true,
-                  enableSuggestions: false,
-                  autocorrect: false,
-                  autofocus: true,
-                  style: const TextStyle(fontFamily: 'lapsus', color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintStyle: TextStyle(fontFamily: 'lapsus', color: Colors.white),
-                    border: InputBorder.none,
-                    hintText: 'min 8 charecters',
-                  ),
-                  controller: controller,
-                ))));
+                width: width * 0.5,
+                child: Stack(alignment: AlignmentDirectional.center, children: [
+                  Image.asset('assets/settings/field-bg.png', height: height * .15, width: width * .5),
+                  Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: TextField(
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        autofocus: true,
+                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                          border: InputBorder.none,
+                          hintText: 'min 8 charecters',
+                        ),
+                        controller: controller,
+                      ))
+                ]))));
   }
 }

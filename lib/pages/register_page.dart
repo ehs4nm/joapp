@@ -1,8 +1,11 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jooj_bank/models/database_handler.dart';
+import 'package:jooj_bank/pages/intro_app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import 'package:go_router/go_router.dart';
@@ -21,8 +24,16 @@ class RegisterPage extends StatefulWidget {
 bool waiting = false;
 
 class _RegisterPageState extends State<RegisterPage> {
+  bool introIsWatched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadIntroIsWatched();
+  }
+
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  bool touchId = false;
+  bool touchId = true;
   String _email = '';
   String _password = '';
   String _childName = '';
@@ -177,9 +188,10 @@ class _RegisterPageState extends State<RegisterPage> {
         await DatabaseHandler.deleteTable('children');
         await DatabaseHandler.deleteTable('parents');
         await DatabaseHandler.insert('children', {'name': _childName, 'balance': '0', 'rfid': ''});
+
         await DatabaseHandler.insert('parents', {'fullName': _parentName, 'email': _email, 'pin': pinCode})
-            .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage())));
-        setState(() => waiting = false);
+            .then((_) => setState(() => waiting = false))
+            .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => introIsWatched ? const HomePage() : const IntroApp())));
       } else {
         if (!mounted) return;
         errorSnackBar(context, responseMap.values.first[0]);
@@ -194,8 +206,13 @@ class _RegisterPageState extends State<RegisterPage> {
   _enableTouchId() async {
     final SharedPreferences prefs = await _prefs;
     await prefs.setBool('touchId', !touchId);
-    touchId = prefs.getBool('touchId') ?? false;
+    touchId = prefs.getBool('touchId') ?? true;
     return touchId;
+  }
+
+  void loadIntroIsWatched() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    introIsWatched = prefs.getBool('introIsWatched') ?? false;
   }
 
   void setPinCode(pinCode) async {

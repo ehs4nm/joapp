@@ -23,7 +23,7 @@ final GoRouter _router = GoRouter(
           path: 'home',
           name: 'home',
           builder: (BuildContext context, GoRouterState state) {
-            return const NewHomePage();
+            return const HomePage();
           },
         ),
         GoRoute(

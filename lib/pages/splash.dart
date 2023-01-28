@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import 'home_page.dart';
-import 'intro_app.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,29 +17,21 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _controller;
 
-  bool introIsWatched = false;
   bool isAuth = false;
-
-  void loadIntroIsWatched() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    introIsWatched = prefs.getBool('introIsWatched') ?? false;
-  }
 
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
 
     if (token != '' && token != null) {
-      setState(() {
-        isAuth = true;
-      });
+      setState(() => isAuth = true);
     }
   }
 
   @override
   void initState() {
     super.initState();
-    loadIntroIsWatched();
+
     _checkIfLoggedIn();
     _controller = VideoPlayerController.asset('assets/splash.mp4')
       ..initialize().then((_) {
@@ -56,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // ignore: use_build_context_synchronously
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => introIsWatched ? (isAuth ? const NewHomePage() : const RegisterPage()) : const IntroApp()),
+      MaterialPageRoute(builder: (context) => isAuth ? const HomePage() : const RegisterPage()),
     );
   }
 

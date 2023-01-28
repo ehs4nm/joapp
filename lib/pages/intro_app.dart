@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:jooj_bank/pages/register_page.dart';
+import 'package:jooj_bank/pages/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wavenet/wavenet.dart';
 
@@ -20,6 +20,8 @@ class _IntroAppState extends State<IntroApp> {
 
   void setIntroIsWatched() async {
     final SharedPreferences prefs = await _prefs;
+    prefs.setBool('firstLoad', true);
+
     await prefs.setBool('introIsWatched', true).then((bool success) {
       return true;
     });
@@ -37,11 +39,7 @@ class _IntroAppState extends State<IntroApp> {
         debugShowCheckedModeBanner: false,
         title: 'Intro',
         theme: ThemeData(primarySwatch: Colors.blue),
-        home: Builder(
-            builder: (context) => WillPopScope(
-                  onWillPop: () async => false,
-                  child: introWidget(context),
-                )));
+        home: Builder(builder: (context) => WillPopScope(onWillPop: () async => false, child: introWidget(context))));
   }
 
   getAudioPlayer(file) {
@@ -49,8 +47,8 @@ class _IntroAppState extends State<IntroApp> {
   }
 
   voicePlaying(String text) async {
-    File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1.25, audioEncoding: "MP3");
-    getAudioPlayer(file.path);
+    // File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1.25, audioEncoding: "MP3");
+    // getAudioPlayer(file.path);
   }
 
   Material introWidget(BuildContext context) {
@@ -81,11 +79,7 @@ class _IntroAppState extends State<IntroApp> {
         child: TextButton(
             onPressed: () {
               setIntroIsWatched();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const RegisterPage()),
-                // MaterialPageRoute(builder: (_) => const AuthGate()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
             child: Image.asset('assets/home/btn-ok.png', width: width * 0.18)),
       )
