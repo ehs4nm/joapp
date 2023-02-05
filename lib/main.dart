@@ -7,7 +7,7 @@ import 'router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) => SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky, overlays: [])).then((_) {
     runApp(MultiProvider(
       providers: [
         ChangeNotifierProvider(

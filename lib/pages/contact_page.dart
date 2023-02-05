@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -75,7 +77,7 @@ class _ContactPageState extends State<ContactPage> {
         isSending = true;
       });
       http.Response? response = await AuthServices.sendDescription(description);
-      if (response == null || response.statusCode == 500) {
+      if (response.statusCode == 500) {
         errorSnackBar(context, 'Network connection error!');
         return;
       }

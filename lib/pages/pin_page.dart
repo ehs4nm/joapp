@@ -19,8 +19,8 @@ class PinPage extends StatefulWidget {
 class _PinPageState extends State<PinPage> {
   final LocalAuthentication auth = LocalAuthentication();
   _SupportState _supportState = _SupportState.unknown;
-  bool? _canCheckBiometrics;
-  List<BiometricType>? _availableBiometrics;
+  // bool? _canCheckBiometrics;
+  // List<BiometricType>? _availableBiometrics;
   String _authorized = 'Not Authorized';
   bool _isAuthenticating = false;
   int pinLength = 0;
@@ -52,12 +52,11 @@ class _PinPageState extends State<PinPage> {
         _authorized = 'Authenticating';
       });
       authenticated = await auth.authenticate(
-        localizedReason: 'Scan your fingerprint to authenticate',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
+          localizedReason: 'Scan your fingerprint to authenticate',
+          options: const AuthenticationOptions(
+            stickyAuth: true,
+            biometricOnly: true,
+          ));
       setState(() {
         _isAuthenticating = false;
         _authorized = 'Authenticating';
@@ -78,8 +77,8 @@ class _PinPageState extends State<PinPage> {
     setState(() {
       _authorized = message;
       if (_authorized == 'yes') {
-        // Navigator.of(context, rootNavigator: true).pop();
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
+        Navigator.of(context).pop('picCorrect');
+        // Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : const WaitingRfidSpendPage(muted: false)));
       }
     });
   }
@@ -136,7 +135,8 @@ class _PinPageState extends State<PinPage> {
                       },
                       onConfirm: (pin) {
                         if (pinCode == pin) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : WaitingRfidSpendPage(muted: false)));
+                          Navigator.of(context).pop('picCorrect');
+                          // Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : const WaitingRfidSpendPage(muted: false)));
                           // Navigator.of(context, rootNavigator: true).pop();
 
                         } else {
@@ -162,11 +162,20 @@ class _PinPageState extends State<PinPage> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(25.0),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: MaterialButton(
                       child: const Text('FORGET PIN?', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, decoration: TextDecoration.underline)),
                       onPressed: () => setState(() {
                         context.push('/login');
+                      }),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: MaterialButton(
+                      child: const Text('Back', style: TextStyle(fontFamily: 'waytosun', fontSize: 15, decoration: TextDecoration.underline)),
+                      onPressed: () => setState(() {
+                        Navigator.of(context).pop();
                       }),
                     ),
                   )

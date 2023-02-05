@@ -7,9 +7,7 @@ import 'package:nfc_manager/nfc_manager.dart';
 import 'package:video_player/video_player.dart';
 
 class WaitingRfidAddPage extends StatefulWidget {
-  final bool muted;
-
-  const WaitingRfidAddPage({super.key, required this.muted});
+  const WaitingRfidAddPage({super.key});
   @override
   State<WaitingRfidAddPage> createState() => _WaitingRfidAddPageState();
 }
@@ -21,7 +19,6 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
   @override
   void initState() {
     super.initState();
-
     _addController = VideoPlayerController.asset('assets/countdown/count-add.mp4')
       ..initialize().then((_) {
         setState(() {});
@@ -47,29 +44,29 @@ class _WaitingRfidAddPageState extends State<WaitingRfidAddPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: LayoutBuilder(
-          builder: (context, constraints) =>
-              _addController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_addController)) : Container(),
-        ));
+    return WillPopScope(
+        onWillPop: () async => false,
+        child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: LayoutBuilder(
+              builder: (context, constraints) =>
+                  _addController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_addController)) : Container(),
+            )));
   }
 
   void _schedule() {
     _timer = Timer(const Duration(seconds: 10), () {
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
       Navigator.of(context).pop('');
     });
   }
 
   String _tagRead() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
       Navigator.of(context).pop('add');
       NfcManager.instance.stopSession();
-      NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-        print('im ok');
-      });
+      NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {});
     });
     return 'add';
   }

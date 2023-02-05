@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/pages/intro_app.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import 'package:go_router/go_router.dart';
 
 import '/Services/globals.dart';
 import 'package:http/http.dart' as http;
-import '/pages/home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -24,12 +24,12 @@ class RegisterPage extends StatefulWidget {
 bool waiting = false;
 
 class _RegisterPageState extends State<RegisterPage> {
-  bool introIsWatched = false;
-
   @override
   void initState() {
     super.initState();
-    loadIntroIsWatched();
+    _tagRead();
+    setFirstLoad();
+    _enableTouchId(true);
   }
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -153,7 +153,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   return Material(
                       color: Colors.transparent,
                       child: InkWell(
-                          onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
+                          onTap: () {
+                            _enableTouchId(!touchId);
+                            print(touchId);
+                          },
                           child: Image.asset(touchId ? "assets/settings/cloud-switch-on.png" : "assets/settings/cloud-switch-off.png", height: height * 0.05, fit: BoxFit.cover)));
                 }),
                 Image.asset('assets/settings/text-turn-on-fingerprint.png', height: height * 0.015),
@@ -180,43 +183,49 @@ class _RegisterPageState extends State<RegisterPage> {
   createAccountPressed() async {
     setState(() => waiting = true);
     bool emailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email);
-    if (emailValid) {
-      http.Response response = await AuthServices.register(_parentName, _childName, _email, _password);
-
-      Map responseMap = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        await DatabaseHandler.deleteTable('children');
-        await DatabaseHandler.deleteTable('parents');
-        await DatabaseHandler.insert('children', {'name': _childName, 'balance': '0', 'rfid': ''});
-
-        await DatabaseHandler.insert('parents', {'fullName': _parentName, 'email': _email, 'pin': pinCode})
-            .then((_) => setState(() => waiting = false))
-            .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => introIsWatched ? const HomePage() : const IntroApp())));
-      } else {
-        if (!mounted) return;
-        errorSnackBar(context, responseMap.values.first[0]);
-        setState(() => waiting = false);
-      }
-    } else {
-      errorSnackBar(context, 'email not valid');
+    if (!emailValid) {
       setState(() => waiting = false);
+      return errorSnackBar(context, 'email not valid');
     }
+
+    http.Response response = await AuthServices.register(_parentName, _childName, _email, _password);
+    Map responseMap = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      setState(() => waiting = false);
+      if (!mounted) return;
+      errorSnackBar(context, responseMap.values.first[0]);
+    }
+
+    await DatabaseHandler.deleteTable('children');
+    await DatabaseHandler.deleteTable('parents');
+    await DatabaseHandler.insert('children', {'name': _childName, 'balance': '0', 'rfid': ''});
+    await DatabaseHandler.insert('parents', {'fullName': _parentName, 'email': _email, 'pin': pinCode})
+        .then((_) => setState(() => waiting = false))
+        .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const IntroApp())));
   }
 
-  _enableTouchId() async {
+  _enableTouchId(state) async {
+    setState(() => touchId = state);
+    print('touchId $state');
     final SharedPreferences prefs = await _prefs;
-    await prefs.setBool('touchId', !touchId);
-    touchId = prefs.getBool('touchId') ?? true;
-    return touchId;
+    await prefs.setBool('touchId', state);
   }
 
-  void loadIntroIsWatched() async {
+  void setFirstLoad() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    introIsWatched = prefs.getBool('introIsWatched') ?? false;
+    await prefs.setBool('firstLoad', true);
   }
 
   void setPinCode(pinCode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('pinCode', pinCode);
+  }
+
+  void _tagRead() async {
+    if (await NfcManager.instance.isAvailable() == false) return;
+    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      print('ok');
+    });
   }
 }

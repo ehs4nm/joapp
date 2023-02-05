@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:jooj_bank/pages/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,11 +20,7 @@ class _IntroAppState extends State<IntroApp> {
 
   void setIntroIsWatched() async {
     final SharedPreferences prefs = await _prefs;
-    prefs.setBool('firstLoad', true);
-
-    await prefs.setBool('introIsWatched', true).then((bool success) {
-      return true;
-    });
+    await prefs.setBool('firstLoad', true);
   }
 
   @override
@@ -35,20 +31,21 @@ class _IntroAppState extends State<IntroApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Intro',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: Builder(builder: (context) => WillPopScope(onWillPop: () async => false, child: introWidget(context))));
+    return WillPopScope(
+        onWillPop: () async => false,
+        child: MaterialApp(debugShowCheckedModeBanner: false, title: 'Intro', theme: ThemeData(primarySwatch: Colors.blue), home: Builder(builder: (context) => introWidget(context))));
   }
 
-  getAudioPlayer(file) {
-    voicePlayer.play(DeviceFileSource(file));
+  getAudioPlayer(filePath) {
+    voicePlayer.setAudioSource(AudioSource.file(filePath));
+    voicePlayer.play();
+
+    // voicePlayer.play(DeviceFileSource(file));
   }
 
   voicePlaying(String text) async {
-    // File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1.25, audioEncoding: "MP3");
-    // getAudioPlayer(file.path);
+    File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1.25, audioEncoding: "MP3");
+    getAudioPlayer(file.path);
   }
 
   Material introWidget(BuildContext context) {
@@ -78,8 +75,8 @@ class _IntroAppState extends State<IntroApp> {
         bottom: height * 0.1,
         child: TextButton(
             onPressed: () {
-              setIntroIsWatched();
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
+              voicePlayer.stop();
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const HomePage()));
             },
             child: Image.asset('assets/home/btn-ok.png', width: width * 0.18)),
       )

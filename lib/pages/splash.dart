@@ -23,9 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
 
-    if (token != '' && token != null) {
-      setState(() => isAuth = true);
-    }
+    if (token != '' && token != null) setState(() => isAuth = true);
   }
 
   @override
@@ -43,12 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _playVideo() async {
     _controller.play();
-    await Future.delayed(const Duration(milliseconds: 6500));
-    // ignore: use_build_context_synchronously
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => isAuth ? const HomePage() : const RegisterPage()),
-    );
+    await Future.delayed(const Duration(milliseconds: 6500)).then((value) => Navigator.push(context, MaterialPageRoute(builder: (context) => isAuth ? const HomePage() : const RegisterPage())));
   }
 
   @override
@@ -62,12 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: LayoutBuilder(
-        builder: (context, constraints) => _controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: constraints.maxWidth / constraints.maxHeight,
-                child: VideoPlayer(_controller),
-              )
-            : Container(),
+        builder: (context, constraints) => _controller.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_controller)) : Container(),
       ),
     );
   }

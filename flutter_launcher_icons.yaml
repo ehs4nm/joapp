@@ -3,6 +3,7 @@ dev_dependencies:
 
 flutter_icons:
   android: "launcher_icon"
+  adaptive_icon_background: "assets/splash.png"
   ios: true
-  image_path: "assets/icon.png"
+  image_path: "assets/pig.png"
   min_sdk_android: 21 # android min sdk min:16, default 21

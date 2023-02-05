@@ -1,21 +1,21 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
 import 'package:another_flushbar/flushbar.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:jooj_bank/pages/waiting_rfid_add.dart';
+import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
 import 'package:just_audio/just_audio.dart';
-// import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/Services/auth_services.dart';
 import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/models/database_handler.dart';
-import 'package:jooj_bank/models/models.dart';
 import 'package:jooj_bank/pages/pin_page.dart';
 import 'package:jooj_bank/widgets/widgets.dart';
 import 'package:lottie/lottie.dart';
-import 'package:nfc_manager/nfc_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wavenet/wavenet.dart';
@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   late AnimationController _secondController;
   late AnimationController _thirdController;
   late TextEditingController spendController;
-  late TextEditingController addSavingController;
+  late TextEditingController addController;
   late TextEditingController noteController;
   late TextEditingController parentNameController;
   late TextEditingController parentEmailController;
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   late TextEditingController newChildController;
   var rainPlaying = false;
   var flarePlaying = false;
-  bool touchId = false;
+  bool touchId = true;
   bool muted = false;
   bool firstLoad = false;
   bool firstDigitvisibility = true;
@@ -76,7 +76,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   final _key = GlobalKey<FormState>();
 
-  late bool isAuthenticated = false;
   @override
   didChangeAppLifecycleState(AppLifecycleState state) {
     appLifecycle = state;
@@ -92,15 +91,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   @override
   void initState() {
     super.initState();
+
     dingPlayer.setAudioSource(AudioSource.asset('assets/sounds/ding.wav'));
     coinDropPlayer.setAudioSource(AudioSource.asset('assets/sounds/coindrop.wav'));
     jackPotPlayer.setAudioSource(AudioSource.asset('assets/sounds/jackpot.wav'));
     backgroundAudio.setAudioSource(AudioSource.asset('assets/sounds/background.mp3'));
+    backgroundAudio.setLoopMode(LoopMode.one);
 
-    _tagRead();
+    tagRead();
     WidgetsBinding.instance.addObserver(this);
     spendController = TextEditingController();
-    addSavingController = TextEditingController();
+    addController = TextEditingController();
     noteController = TextEditingController();
     parentNameController = TextEditingController();
     parentEmailController = TextEditingController();
@@ -119,10 +120,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
     loadMute();
 
-    _userLoggedIn();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (isAuthenticated) return context.push('/login');
-    });
     loadParent().then((value) {
       setState(() {
         parentName = value[0].fullName!;
@@ -139,7 +136,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       });
     }).then((value) async {
       if (firstLoad) {
-        await voicePlaying(
+        await voicePlaying(9500,
             """Welcome to Jjooj bank $selectedChild! Parents to add money to $selectedChild's Jjooj bank please press the plus sign and minus sign to let $selectedChild to withdraw money from the Jjooj bank.""");
       }
     });
@@ -148,7 +145,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   @override
   void dispose() {
     spendController.dispose();
-    addSavingController.dispose();
+    addController.dispose();
     noteController.dispose();
     newChildController.dispose();
     backgroundAudio.dispose();
@@ -167,10 +164,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: mainHomeWidget(context, height, width, childrenProvider),
-    );
+
+    return WillPopScope(onWillPop: () async => false, child: mainHomeWidget(context, height, width, childrenProvider));
   }
 
   Material mainHomeWidget(BuildContext context, double height, double width, childrenProvider) {
@@ -264,22 +259,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           Positioned(bottom: height * 0.43, child: Lottie.asset('assets/animations/rainbow.json', controller: _controller, height: height * 0.2)),
           Positioned(
               bottom: height * 0.05,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Material(
-                      color: Colors.transparent,
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: IconButton(
-                              onPressed: () =>
-                                  // setDigits('178'),
-                                  openAddToSaving(context),
-                              icon: Image.asset('assets/home/btn-plus.png'),
-                              iconSize: width * 0.1))),
-                  Material(color: Colors.transparent, child: IconButton(onPressed: () => {openSpend(context)}, icon: Image.asset('assets/home/btn-minus.png'), iconSize: width * 0.1)),
-                ],
-              )),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                Material(
+                    color: Colors.transparent,
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: IconButton(onPressed: () => openPay(context), icon: Image.asset('assets/home/btn-plus.png'), iconSize: width * 0.1))),
+                Material(color: Colors.transparent, child: IconButton(onPressed: () => {openSpend(context)}, icon: Image.asset('assets/home/btn-minus.png'), iconSize: width * 0.1)),
+              ]))
         ]));
   }
 
@@ -358,7 +345,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                       try {
                                         backgroundAudio.stop();
                                         AuthServices.logout();
-                                        setIntroIsWatched();
                                         context.push('/login');
                                       } catch (e) {
                                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -720,9 +706,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         ]))))));
   }
 
-  Future openAddToSaving(context) {
+  Future openPay(context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+    addController.clear();
+    noteController.clear();
     return showDialog(
         context: context,
         builder: (context) => BackdropFilter(
@@ -731,53 +719,51 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 backgroundColor: Colors.transparent,
                 child: Stack(alignment: AlignmentDirectional.center, children: [
                   Image.asset('assets/home/bg-add-to-saving.png', height: height * 0.375),
-                  NumberField(height: height, width: width, controller: addSavingController),
+                  NumberField(height: height, width: width, controller: addController),
                   NoteField(height: height, width: width, controller: noteController),
                   Positioned(
                       bottom: height * 0.015,
                       height: height * 0.075,
                       width: width * .7,
                       child: Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            const PositionedCancelBtn(),
-                            InkWell(
-                                enableFeedback: false,
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                                onTap: () async {
-                                  if (addSavingController.value.text.isEmpty || addSavingController.value.text == '0' || addSavingController.value.text == '') return;
-                                  if (int.parse(addSavingController.value.text) + int.parse(selectedChildBalance) > 999) {
-                                    Flushbar(
-                                      backgroundColor: Colors.blueGrey,
-                                      messageColor: Colors.white,
-                                      message: 'Too much money, exceeded \$999',
-                                      duration: const Duration(milliseconds: 1500),
-                                    ).show(context);
-                                    return;
-                                  }
-                                  Navigator.of(context).pop();
-                                  await openHandItToChild();
-                                },
-                                child: Image.asset('assets/home/btn-pay.png', height: height * 0.045)),
-                          ],
-                        ),
-                      ))
+                          child: Row(mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                        const PositionedCancelBtn(),
+                        InkWell(
+                            enableFeedback: false,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () async {
+                              if (addController.value.text.isEmpty || addController.value.text == '0' || addController.value.text == '') return;
+                              if (int.parse(addController.value.text) + int.parse(selectedChildBalance) > 999) {
+                                Flushbar(
+                                  backgroundColor: Colors.blueGrey,
+                                  messageColor: Colors.white,
+                                  message: 'Too much money, exceeded \$999',
+                                  duration: const Duration(milliseconds: 1500),
+                                ).show(context);
+                                return;
+                              }
+                              Navigator.of(context).pop();
+                              awaitReturnForRfidResult(context);
+                              // await openHandItToChild();
+                            },
+                            child: Image.asset('assets/home/btn-pay.png', height: height * 0.045)),
+                      ])))
                 ]))));
   }
 
   Future openSpend(context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+    spendController.clear();
+    noteController.clear();
     return showDialog(
         context: context,
         builder: (context) => BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Dialog(
                 backgroundColor: Colors.transparent,
-                child: Stack(children: [
+                child: Stack(alignment: AlignmentDirectional.center, children: [
                   Image.asset('assets/home/bg-spend-dialog.png', height: height * 0.375),
                   NumberField(height: height, width: width, controller: spendController),
                   NoteField(height: height, width: width, controller: noteController),
@@ -789,68 +775,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                           child: Row(mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                         const PositionedCancelBtn(),
                         InkWell(
-                          enableFeedback: false,
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
-                            if (int.parse(spendController.value.text) > int.parse(selectedChildBalance)) {
-                              Flushbar(
-                                backgroundColor: Colors.blueGrey,
-                                messageColor: Colors.white,
-                                message: 'Not enough money',
-                                duration: const Duration(milliseconds: 1500),
-                              ).show(context);
-                            } else {
+                            enableFeedback: false,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () async {
+                              if (spendController.value.text.isEmpty || spendController.value.text == '0' || spendController.value.text == '') return;
+                              if (int.parse(spendController.value.text) > int.parse(selectedChildBalance)) {
+                                Flushbar(
+                                  backgroundColor: Colors.blueGrey,
+                                  messageColor: Colors.white,
+                                  message: 'Not enough money',
+                                  duration: const Duration(milliseconds: 1500),
+                                ).show(context);
+                                return;
+                              }
                               Navigator.of(context).pop();
-                              await openHandItToChild();
-                            }
-                          },
-                          child: Image.asset('assets/home/btn-pay.png', height: height * 0.045),
-                        ),
+                              awaitReturnForRfidResult(context);
+                            },
+                            child: Image.asset('assets/home/btn-spend.png', height: height * 0.045)),
                       ])))
                 ]))));
-  }
-
-  void loadTouchId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() => touchId = prefs.getBool('touchId') ?? false);
-  }
-
-  _enableTouchId() async {
-    final SharedPreferences prefs = await _prefs;
-    await prefs.setBool('touchId', !touchId);
-    touchId = prefs.getBool('touchId') ?? false;
-    return touchId;
-  }
-
-  loadMute() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      muted = prefs.getBool('muted') ?? false;
-      firstLoad = prefs.getBool('firstLoad') ?? true;
-    });
-    if (firstLoad == true) prefs.setBool('firstLoad', false);
-    if (!muted) {
-      backgroundAudio.setLoopMode(LoopMode.one);
-      backgroundAudio.play();
-    } else {
-      backgroundAudio.pause();
-    }
-    return muted;
-  }
-
-  void _enableMute() async {
-    final SharedPreferences prefs = await _prefs;
-    await prefs.setBool('muted', !muted);
-    muted = prefs.getBool('muted') ?? false;
-    setState(() => muted);
   }
 
   Future openHandItToChild() async {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    await voicePlaying("Parents at this point please hand the phone to $selectedChild and please read this important note.");
+    voicePlaying(5500, "Parents at this point please hand the phone to $selectedChild and please read this important note.");
     var selectedChildName = selectedChild[0].toUpperCase() + selectedChild.substring(1);
     return showDialog(
         context: context,
@@ -858,48 +808,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: height * 0.125),
-                child: Dialog(
-                    insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
-                    backgroundColor: Colors.transparent,
-                    child: Stack(fit: StackFit.expand, children: [
-                      Center(child: Image.asset('assets/home/bg-try-again.png')),
-                      Column(children: [
-                        SizedBox(height: height * 0.1),
-                        SizedBox(
-                            height: height * 0.6,
-                            child: Padding(
-                                padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.05, width * 0.14, 5),
-                                child: SingleChildScrollView(
-                                    child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Text('Attention!\n', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
-                                    Text(
-                                      textAlign: TextAlign.justify,
-                                      'Dear Parent at this point please hand your phone to $selectedChildName to precede. $selectedChildName needs to tab the phone to the magic gold coin tag on top the Jooj Bank. $selectedChildName have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
-                                      style: const TextStyle(fontSize: 15, color: Colors.black54),
-                                    )
-                                  ],
-                                ))))
-                      ]),
-                      Positioned(
-                          width: width,
-                          bottom: 0,
-                          child: Material(
-                              color: Colors.transparent,
-                              child: TextButton.icon(
-                                style: const ButtonStyle(
-                                  splashFactory: NoSplash.splashFactory,
-                                ),
-                                label: const Text(''),
-                                onPressed: () {
-                                  voicePlayer.stop();
-                                  Navigator.of(context).pop();
-                                  awaitReturnForRfidResult(context);
-                                },
-                                icon: Image.asset('assets/home/btn-start.png', height: height * 0.075),
-                              )))
-                    ])))));
+                child: WillPopScope(
+                  onWillPop: () async => false,
+                  child: Dialog(
+                      insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
+                      backgroundColor: Colors.transparent,
+                      child: Stack(fit: StackFit.expand, children: [
+                        Center(child: Image.asset('assets/home/bg-try-again.png')),
+                        Column(children: [
+                          SizedBox(height: height * 0.1),
+                          AttentionText(height: height, width: width, selectedChildName: selectedChildName),
+                        ]),
+                        Positioned(
+                            width: width,
+                            bottom: height * 0.08,
+                            child: Material(
+                                color: Colors.transparent,
+                                child: TextButton.icon(
+                                  style: const ButtonStyle(
+                                    splashFactory: NoSplash.splashFactory,
+                                  ),
+                                  label: const Text(''),
+                                  onPressed: () {
+                                    voicePlayer.stop();
+                                    Navigator.of(context).pop();
+                                    // awaitReturnForRfidResult(context);
+                                  },
+                                  icon: Image.asset('assets/home/btn-start.png', height: height * 0.075),
+                                )))
+                      ])),
+                ))));
   }
 
   Future openTryAgin() {
@@ -936,83 +874,57 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                 ))))
                       ]),
                       Positioned(
-                          left: width * 0.1,
-                          // width: width,
-                          bottom: height * 0.01,
-                          child: Material(
-                              color: Colors.transparent,
-                              child: TextButton.icon(
-                                label: const Text(''),
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: Image.asset('assets/home/btn-try-again-home.png', height: height * 0.075),
-                              ))),
-                      Positioned(
-                          right: width * 0.1,
-                          // width: width,
-                          bottom: height * 0.01,
-                          child: Material(
-                              color: Colors.transparent,
-                              child: TextButton.icon(
-                                label: const Text(''),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  awaitReturnForRfidResult(context);
-                                },
-                                icon: Image.asset('assets/home/btn-try-again.png', height: height * 0.075),
-                              )))
+                        width: width,
+                        bottom: height * 0.06,
+                        child: Center(
+                          child: Row(mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.center, children: [
+                            BackHomeBtn(width: width, height: height),
+                            Material(
+                                color: Colors.transparent,
+                                child: TextButton.icon(
+                                  label: const Text(''),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    awaitReturnForRfidResult(context);
+                                  },
+                                  icon: Image.asset('assets/home/btn-try-again.png', height: height * 0.075),
+                                )),
+                          ]),
+                        ),
+                      )
                     ])))));
   }
 
   void awaitReturnForRfidResult(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => addSavingController.text != '' ? const PinPage(type: 'add') : const PinPage(type: 'spend'))).then((rfidRead) {
-      switch (rfidRead) {
-        case 'add':
-          addTobalance();
-          addSavingController.clear();
-          break;
-        case 'spend':
-          subtractBalance();
-          spendController.clear();
-          break;
-        default:
-          openTryAgin();
-          break;
-      }
-      noteController.clear();
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const PinPage(type: 'spend'))).then((picCorrect) async {
+      print('picCorrect   $picCorrect');
+      if (picCorrect != 'picCorrect') return;
+      await openHandItToChild();
+      await Navigator.of(this.context).push(MaterialPageRoute(builder: (context) => addController.text != '' ? const WaitingRfidAddPage() : const WaitingRfidSpendPage())).then((rfidRead) {
+        print('rfidRead   $rfidRead');
+        switch (rfidRead) {
+          case 'add':
+            addTobalance();
+            addController.clear();
+            break;
+          case 'spend':
+            subtractBalance();
+            spendController.clear();
+            break;
+          default:
+            print('rfidRead   $rfidRead');
+
+            openTryAgin();
+            break;
+        }
+        noteController.clear();
+      });
     });
-  }
-
-  void muteBackgroundAudio() async {
-    if (!muted) {
-      await backgroundAudio.pause();
-    } else {
-      await backgroundAudio.play();
-    }
-  }
-
-  getAudioPlayer(filePath) {
-    voicePlayer.setAudioSource(filePath);
-    voicePlayer.play();
-  }
-
-  voicePlaying(String text) async {
-    await backgroundAudio.setVolume(0.1);
-    voicePlayer.setAudioSource(AudioSource.asset('assets/sounds/akon.mp3'));
-    voicePlayer.play();
-    Future.delayed(const Duration(milliseconds: 5000)).then((value) => backgroundAudio.setVolume(1));
-    // try {
-    //   File file = await service
-    //       .textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3")
-    //       .catchError((error) => print('Wavenet service is unreachable!:  $error'));
-    //   getAudioPlayer(file.path);
-    // } on FormatException {
-    //   print('Wavenet service is unreachable!');
-    // }
   }
 
   void addTobalance() async {
     final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
-    var accumulatedBalance = int.parse(selectedChildBalance) + int.parse(addSavingController.text != '' ? addSavingController.text : '0');
+    var accumulatedBalance = int.parse(selectedChildBalance) + int.parse(addController.text != '' ? addController.text : '0');
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
     childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
@@ -1028,13 +940,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (int.parse(selectedChildBalance) > 9) secondDigitvisibility = true;
       setDigits(accumulatedBalance.toString(), lastSelectedChildBalance);
     });
-    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => rainPlaying = false))
-        .then((value) async => await voicePlaying("Grate job $selectedChild!!"))
-        .then((value) => backgroundAudio.play());
+    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => rainPlaying = false)).then((value) async => await voicePlaying(2000, "Grate job $selectedChild!!")).then((value) {
+      if (!muted) {
+        // backgroundAudio.setLoopMode(LoopMode.one);
+        backgroundAudio.play();
+      }
+    });
 
-    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addSavingController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
+    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
-    addSavingController.clear();
+    addController.clear();
     noteController.clear();
   }
 
@@ -1057,9 +972,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       setDigits(accumulatedBalance.toString(), lastSelectedChildBalance);
     });
 
-    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => flarePlaying = false))
-        .then((value) async => await voicePlaying("Awesome $selectedChild!!"))
-        .then((value) => backgroundAudio.play());
+    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => flarePlaying = false)).then((value) async => await voicePlaying(2000, "Awesome $selectedChild!!")).then((value) {
+      if (!muted) {
+        // backgroundAudio.setLoopMode(LoopMode.one);
+        backgroundAudio.play();
+      }
+    });
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
 
     spendController.clear();
@@ -1072,9 +990,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     List<int> intBalance = digitsExtract(balance);
     List<int> intLastBalance = digitsExtract(lastBalance);
 
-    firstDigit = intBalance[0];
-    secondDigit = intBalance[1];
-    thirdDigit = intBalance[2];
+    int firstDigit = intBalance[0];
+    int secondDigit = intBalance[1];
+    int thirdDigit = intBalance[2];
 
     int lastFirstDigit = intLastBalance[0];
     int lastSecondDigit = intLastBalance[1];
@@ -1084,76 +1002,61 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _secondController = _digitsController[8];
     _thirdController = _digitsController[7];
 
-    if (int.parse(lastBalance) > 99) {
-      print(lastBalance);
-      firstDigitvisibility = true;
-    } else {
-      print('lastBalance $lastBalance');
+    setState(() {
+      (int.parse(lastBalance) > 99 || int.parse(balance) > 99) ? firstDigitvisibility = true : firstDigitvisibility = false;
+      (int.parse(lastBalance) > 9 || int.parse(balance) > 9) ? secondDigitvisibility = true : secondDigitvisibility = false;
+    });
 
-      firstDigitvisibility = false;
+    print('intBalance $intBalance $intLastBalance');
+    print('firstDigit++++ $firstDigit $lastFirstDigit');
+    print('secondDigit++++ $secondDigit $lastSecondDigit');
+    print('thirdDigit++++ $thirdDigit $lastThirdDigit');
+
+    if (!(firstDigit == 0 && lastFirstDigit == 0)) {
+      if (firstDigit == lastFirstDigit) {
+      } else if ((firstDigit - lastFirstDigit).abs() < 3) {
+        await _firstController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+        _firstController.reset();
+        _firstController.animateTo(numbersArray[firstDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+      } else {
+        _firstController
+            .animateTo(numbersArray[firstDigit])
+            .then((_) => firstDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
+            .then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+      }
     }
-    if (int.parse(lastBalance) > 9) {
-      print('lastBalance123 $lastBalance');
 
-      secondDigitvisibility = true;
+    if (secondDigit == 0) {
+      setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+    }
+    if (secondDigit == lastSecondDigit) {
+      setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+    } else if ((secondDigit - lastSecondDigit).abs() < 3) {
+      await _secondController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+      _secondController.reset();
+      _secondController.animateTo(numbersArray[secondDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
     } else {
-      print('lastBalance1234 $lastBalance');
-
-      secondDigitvisibility = false;
+      _secondController
+          .animateTo(numbersArray[secondDigit])
+          .then((_) => secondDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
+          .then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
     }
 
-    print('++++ $firstDigit $lastFirstDigit');
-    // if (firstDigit == lastFirstDigit) {
-    //   _firstController
-    //       .animateTo(numbersArray[9])
-    //       .then((_) => _firstController.animateTo(numbersArray[firstDigit]))
-    //       .then((_) => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false);
-    // } else {
-    _firstController.animateTo(numbersArray[firstDigit]).then((_) => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false);
-    // }
+    if (thirdDigit == lastThirdDigit) {
+    } else if ((thirdDigit - lastThirdDigit).abs() < 3) {
+      await _thirdController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+      _thirdController.reset();
+      _thirdController.animateTo(numbersArray[thirdDigit]);
+    } else {
+      await _thirdController.animateTo(numbersArray[thirdDigit]);
+    }
 
-    print('++++ $secondDigit $lastSecondDigit');
-    // if (secondDigit == lastSecondDigit) {
-    //   _firstController
-    //       .animateTo(numbersArray[9])
-    //       .then((_) => _secondController.animateTo(numbersArray[secondDigit]))
-    //       .then((_) => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
-    // } else {
-    _secondController.animateTo(numbersArray[secondDigit]).then((_) => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
-    // }
-
-    print('++++ $thirdDigit $lastThirdDigit');
-    // if (thirdDigit == lastThirdDigit) {
-    //   _firstController.animateTo(numbersArray[9]).then((_) => _thirdController.animateTo(numbersArray[thirdDigit]));
-    // } else {
-    _thirdController.animateTo(numbersArray[thirdDigit]);
-    // }
-
-    print('++++++ $balance');
     return true;
-  }
-
-  List<int> digitsExtract(String number) {
-    if (number.length < 2) {
-      number = '00$number';
-    } else if (number.length < 3) {
-      number = '0$number';
-    }
-    return [int.tryParse(number[0])!, int.tryParse(number[1])!, int.tryParse(number[2])!];
-  }
-
-  Future<List<Parent>> loadParent() async {
-    return await DatabaseHandler.selectParent();
-  }
-
-  Future<List<Child>> loadChild() async {
-    return await DatabaseHandler.selectChild();
   }
 
   Future openParentName() {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    print(height);
     return showDialog(
         context: context,
         builder: (context) => BackdropFilter(
@@ -1321,7 +1224,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                             builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
                               if (snapshot.hasData) {
                                 return SizedBox(
-                                    height: height * 0.43,
+                                    height: height * 0.4,
                                     child: RawScrollbar(
                                         thumbColor: const Color.fromARGB(255, 88, 163, 219),
                                         thickness: 5,
@@ -1335,8 +1238,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                             shrinkWrap: true,
                                             itemCount: snapshot.data?.length,
                                             itemBuilder: (BuildContext context, int index) {
+                                              print(snapshot.data![index]['value']);
+                                              print(snapshot.data![index]['note']);
                                               return SizedBox(
-                                                  height: height * .1,
+                                                  height: height * .08,
                                                   child: Padding(
                                                       padding: EdgeInsets.fromLTRB(width * 0.1, 0, width * 0.1, 5),
                                                       child: Stack(alignment: AlignmentDirectional.center, children: [
@@ -1359,16 +1264,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                                         width: width * .15,
                                                                         child: Padding(
                                                                             padding: const EdgeInsets.only(right: 5),
-                                                                            child: Stack(children: [
-                                                                              Image.asset('assets/settings/digit-box.png', height: height * .05),
+                                                                            child: Stack(alignment: AlignmentDirectional.center, children: [
+                                                                              Image.asset('assets/settings/digit-box.png', height: height * .055),
                                                                               Padding(
-                                                                                  padding: EdgeInsets.all(width * .025),
-                                                                                  child: Text("\$${snapshot.data![index]['value'].abs().toString().padLeft(3, '0')}",
-                                                                                      style: TextStyle(
+                                                                                  padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                                                                                  child: Text("\$${snapshot.data![index]['value'].abs().toString()}",
+                                                                                      style: const TextStyle(
                                                                                         fontFamily: 'waytosun',
-                                                                                        fontSize: width * .033,
+                                                                                        fontSize: 13,
                                                                                         color: Colors.white,
-                                                                                        shadows: const <Shadow>[
+                                                                                        shadows: <Shadow>[
                                                                                           Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
                                                                                         ],
                                                                                       ))),
@@ -1380,14 +1285,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                                           physics: const BouncingScrollPhysics(),
                                                                           scrollDirection: Axis.horizontal,
                                                                           child: Text(snapshot.data![index]['note'] == "" ? '----' : snapshot.data![index]['note'],
-                                                                              style: TextStyle(
-                                                                                  fontFamily: 'waytosun',
-                                                                                  fontSize: width * .033,
-                                                                                  color: const Color.fromRGBO(120, 68, 53, 1),
-                                                                                  overflow: TextOverflow.fade,
-                                                                                  shadows: const <Shadow>[
-                                                                                    Shadow(offset: Offset(0.0, 1.0), blurRadius: 4.0, color: Colors.white),
-                                                                                  ])),
+                                                                              style: const TextStyle(
+                                                                                fontFamily: 'waytosun',
+                                                                                fontSize: 15,
+                                                                                color: Color.fromRGBO(120, 68, 53, 1),
+                                                                                overflow: TextOverflow.fade,
+                                                                                // shadows: const <Shadow>[
+                                                                                //   Shadow(offset: Offset(0.0, 2.0), blurRadius: 4.0, color: Colors.white),
+                                                                                // ]
+                                                                              )),
                                                                         )),
                                                                     SizedBox(height: height * .14, width: width * .08, child: Image.asset('assets/settings/btn-checked.png', height: height * .03))
                                                                   ]))
@@ -1409,51 +1315,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                               onTap: () => Navigator.of(context).pop(),
                               child: SizedBox(width: width * 0.14, height: height * 0.15))),
                     ])))));
-  }
-
-  Future _userLoggedIn() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    String? token = localStorage.getString('token');
-    isAuthenticated = (token == '') ? false : true;
-    return token == '' ? false : true;
-  }
-
-  emailChanged() async {
-    if (parentEmailController.text.isNotEmpty) {
-      http.Response? response = await AuthServices.changeEmail(parentEmailController.text);
-      if (response == null || response.statusCode == 500 || response.statusCode == 404) {
-        errorSnackBar(context, 'Network connection error!');
-        return;
-      }
-
-      Map responseMap = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        errorSnackBar(context, 'Email changed!');
-      } else {
-        errorSnackBar(context, responseMap.values.first);
-      }
-    } else {
-      errorSnackBar(context, 'Enter all required fields');
-    }
-  }
-
-  passwordChanged() async {
-    if (parentPasswordController.text.isNotEmpty) {
-      http.Response? response = await AuthServices.changePassword(parentPasswordController.text);
-      if (response == null || response.statusCode == 500 || response.statusCode == 404) {
-        errorSnackBar(context, 'Network connection error!');
-        return;
-      }
-
-      Map responseMap = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        errorSnackBar(context, 'Email changed!');
-      } else {
-        errorSnackBar(context, responseMap.values.first);
-      }
-    } else {
-      errorSnackBar(context, 'Enter all required fields');
-    }
   }
 
   openDeleteChild(context, childrenProvider, childIdToBeRemoved, String childNameToBeRemoved) {
@@ -1501,15 +1362,84 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     ])))));
   }
 
-  void _tagRead() async {
-    if (await NfcManager.instance.isAvailable() == false) return;
-    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      print('ok');
-    });
+  emailChanged() async {
+    if (parentEmailController.text.isEmpty) return errorSnackBar(context, 'Enter all required fields');
+    http.Response? response = await AuthServices.changeEmail(parentEmailController.text);
+    if (response.statusCode == 500 || response.statusCode == 404) return errorSnackBar(context, 'Network connection error!');
+    Map responseMap = jsonDecode(response.body);
+    if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+    return errorSnackBar(context, 'Email changed!');
   }
 
-  void setIntroIsWatched() async {
+  passwordChanged() async {
+    if (parentPasswordController.text.isEmpty) return errorSnackBar(context, 'Enter all required fields');
+    http.Response? response = await AuthServices.changePassword(parentPasswordController.text);
+    if (response.statusCode == 500 || response.statusCode == 404) return errorSnackBar(context, 'Network connection error!');
+    Map responseMap = jsonDecode(response.body);
+    if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+    return errorSnackBar(context, 'Email changed!');
+  }
+
+  void loadTouchId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() => touchId = prefs.getBool('touchId') ?? false);
+  }
+
+  _enableTouchId() async {
     final SharedPreferences prefs = await _prefs;
-    await prefs.setBool('introIsWatched', false);
+    await prefs.setBool('touchId', !touchId);
+    touchId = prefs.getBool('touchId') ?? false;
+    return touchId;
+  }
+
+  loadMute() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      muted = prefs.getBool('muted') ?? false;
+      firstLoad = prefs.getBool('firstLoad') ?? true;
+    });
+    if (!muted) {
+      // backgroundAudio.setLoopMode(LoopMode.one);
+      backgroundAudio.play();
+    } else {
+      backgroundAudio.pause();
+    }
+    if (firstLoad == true) prefs.setBool('firstLoad', false);
+    return muted;
+  }
+
+  void _enableMute() async {
+    final SharedPreferences prefs = await _prefs;
+    await prefs.setBool('muted', !muted);
+    muted = prefs.getBool('muted') ?? false;
+    setState(() => muted);
+  }
+
+  void muteBackgroundAudio() async {
+    if (!muted) {
+      await backgroundAudio.pause();
+    } else {
+      // backgroundAudio.setLoopMode(LoopMode.one);
+      await backgroundAudio.play();
+    }
+  }
+
+  getAudioPlayer(filePath, milliseconds) async {
+    await backgroundAudio.setVolume(0.1);
+    voicePlayer.setAudioSource(AudioSource.file(filePath));
+    voicePlayer.play();
+    Future.delayed(Duration(milliseconds: milliseconds)).then((value) => backgroundAudio.setVolume(1));
+  }
+
+  voicePlaying(int milliseconds, String text) async {
+    try {
+      File file = await service
+          .textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3")
+          .timeout(const Duration(seconds: 4))
+          .catchError((error) => print('Wavenet service is unreachable!:  $error'));
+      getAudioPlayer(file.path, milliseconds);
+    } on FormatException {
+      print('Wavenet service is unreachable!');
+    }
   }
 }

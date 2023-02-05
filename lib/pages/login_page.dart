@@ -8,11 +8,11 @@ import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/models/models.dart';
 import 'package:jooj_bank/pages/intro_app.dart';
 import 'package:jooj_bank/providers/children_provider.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import '/Services/globals.dart';
 import 'package:http/http.dart' as http;
-import '/pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -26,12 +26,11 @@ String _password = '';
 bool waiting = false;
 
 class _LoginPageState extends State<LoginPage> {
-  bool introIsWatched = false;
-
   @override
   void initState() {
     super.initState();
-    loadIntroIsWatched();
+    _tagRead();
+    setFirstLoad();
   }
 
   @override
@@ -106,32 +105,28 @@ class _LoginPageState extends State<LoginPage> {
 
   loginPressed() async {
     setState(() => waiting = true);
-    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email)) {
-      errorSnackBar(context, 'Enter a valid email address');
-    } else if (_email.isNotEmpty && _password.isNotEmpty) {
-      try {
-        http.Response? response = await AuthServices.login(_email, _password);
-        if (response == null || response.statusCode == 500 || response.statusCode == 404) {
-          errorSnackBar(context, 'Network connection error!');
-          setState(() => waiting = false);
-          return;
-        }
+    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email)) return errorSnackBar(context, 'Enter a valid email address');
 
-        Map responseMap = jsonDecode(response.body);
-        if (response.statusCode == 200) {
-          setState(() => waiting = true);
-          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => introIsWatched ? const HomePage() : const IntroApp()));
-          extractActions();
-          extractChildren();
-        } else {
-          errorSnackBar(context, responseMap.values.first);
-        }
-      } on Exception {
-        print('Time out connection 😑');
+    if (!(_email.isNotEmpty && _password.isNotEmpty)) return errorSnackBar(context, 'Enter all required fields');
+
+    try {
+      http.Response? response = await AuthServices.login(_email, _password);
+      if (response == null || response.statusCode == 500 || response.statusCode == 404) {
+        setState(() => waiting = false);
+        return errorSnackBar(context, 'Network connection error!');
       }
-    } else {
-      errorSnackBar(context, 'Enter all required fields');
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+
+      setState(() => waiting = true);
+      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const IntroApp()));
+      await extractActions();
+      await extractChildren();
+    } on Exception {
+      print('Time out connection 😑');
     }
+
     setState(() => waiting = false);
   }
 
@@ -143,19 +138,15 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       Map responseMap = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        if (responseMap.values.last.isNotEmpty) {
-          var actionsJson = jsonDecode(response.body)['actions'] as List;
-          List<BankAction> actions = actionsJson.map((e) => BankAction.fromJson(e)).toList();
-          await DatabaseHandler.deleteTable('actions');
-          for (var i = 0; i < actions.length; i++) {
-            await DatabaseHandler.insert('actions', actions[i].toMap());
-          }
-        }
-        // await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
-      } else {
-        errorSnackBar(context, responseMap.values.first);
+      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+      if (responseMap.values.last.isEmpty) return;
+      var actionsJson = jsonDecode(response.body)['actions'] as List;
+      List<BankAction> actions = actionsJson.map((e) => BankAction.fromJson(e)).toList();
+      await DatabaseHandler.deleteTable('actions');
+      for (var i = 0; i < actions.length; i++) {
+        await DatabaseHandler.insert('actions', actions[i].toMap());
       }
+      // await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
     } on Exception {
       print('Time out connection 😑');
     }
@@ -187,8 +178,15 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void loadIntroIsWatched() async {
+  void _tagRead() async {
+    if (await NfcManager.instance.isAvailable() == false) return;
+    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      print('ok');
+    });
+  }
+
+  void setFirstLoad() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    introIsWatched = prefs.getBool('introIsWatched') ?? false;
+    await prefs.setBool('firstLoad', true);
   }
 }

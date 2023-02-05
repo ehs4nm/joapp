@@ -47,7 +47,7 @@ dependencies:
   flutter_svg: ^1.1.6
   lottie: ^1.4.3
   http: ^0.13.5
-  audioplayers: ^1.1.1
+  # audioplayers: ^1.1.1
   intl: ^0.18.0
   nfc_manager: ^3.1.1
   wavenet: ^2.0.5
@@ -89,7 +89,6 @@ flutter:
     - assets/sounds/background.mp3
     - assets/sounds/coindrop.wav
     - assets/sounds/ding.wav
-    - assets/sounds/akon.mp3
     - assets/sounds/jackpot.wav
 
     # An image asset can refer to one or more resolution-specific "variants", see

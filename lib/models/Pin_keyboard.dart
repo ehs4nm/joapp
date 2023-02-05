@@ -1,4 +1,4 @@
-// ignore_for_file: file_names
+// ignore_for_file: file_names, library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
 
@@ -98,7 +98,7 @@ class _PinKeyboardState extends State<PinKeyboard> {
         onTap: () {
           onPress(number);
         },
-        child: Container(
+        child: SizedBox(
           height: widget.space,
           width: widget.space,
           child: Center(child: Padding(padding: const EdgeInsets.all(3.0), child: Image.asset('assets/pin/$number.png', height: 150))
@@ -118,10 +118,8 @@ class _PinKeyboardState extends State<PinKeyboard> {
         customBorder: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(widget.space),
         ),
-        child: Container(height: widget.space, width: widget.space, child: Center(child: icon)),
-        onTap: () {
-          onPress();
-        },
+        child: SizedBox(height: widget.space, width: widget.space, child: Center(child: icon)),
+        onTap: () => onPress(),
       );
 
   void _handleTabNumber(String number) {
@@ -150,7 +148,7 @@ class _PinKeyboardState extends State<PinKeyboard> {
   }
 
   void _handleTabBackspace() {
-    if (_pinCode.length > 0) {
+    if (_pinCode.isNotEmpty) {
       _pinCode = _pinCode.substring(0, _pinCode.length - 1);
       if (widget.onChange != null) {
         widget.onChange!(_pinCode);

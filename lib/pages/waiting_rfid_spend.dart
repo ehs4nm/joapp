@@ -7,9 +7,7 @@ import 'package:nfc_manager/nfc_manager.dart';
 import 'package:video_player/video_player.dart';
 
 class WaitingRfidSpendPage extends StatefulWidget {
-  final bool muted;
-
-  WaitingRfidSpendPage({super.key, required this.muted});
+  const WaitingRfidSpendPage({super.key});
   @override
   State<WaitingRfidSpendPage> createState() => _WaitingRfidSpendPageState();
 }
@@ -48,30 +46,29 @@ class _WaitingRfidSpendPageState extends State<WaitingRfidSpendPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: LayoutBuilder(
-        builder: (context, constraints) =>
-            _spendController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_spendController)) : Container(),
-      ),
-    );
+    return WillPopScope(
+        onWillPop: () async => false,
+        child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: LayoutBuilder(
+              builder: (context, constraints) =>
+                  _spendController.value.isInitialized ? AspectRatio(aspectRatio: constraints.maxWidth / constraints.maxHeight, child: VideoPlayer(_spendController)) : Container(),
+            )));
   }
 
   void _schedule() {
     _timer = Timer(const Duration(seconds: 10), () {
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
       Navigator.of(context).pop('');
     });
   }
 
   String _tagRead() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
       Navigator.of(context).pop('spend');
       NfcManager.instance.stopSession();
-      NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-        print('im ok');
-      });
+      NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {});
     });
     return 'spend';
   }
