@@ -180,28 +180,6 @@ class PassField extends StatelessWidget {
   }
 }
 
-class BackHomeBtn extends StatelessWidget {
-  const BackHomeBtn({
-    Key? key,
-    required this.width,
-    required this.height,
-  }) : super(key: key);
-
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-        color: Colors.transparent,
-        child: TextButton.icon(
-          label: const Text(''),
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Image.asset('assets/home/btn-try-again-home.png', height: height * 0.075),
-        ));
-  }
-}
-
 class AttentionText extends StatelessWidget {
   const AttentionText({
     Key? key,
@@ -224,7 +202,7 @@ class AttentionText extends StatelessWidget {
                 child: Column(mainAxisSize: MainAxisSize.max, children: [
               Text('Attention!\n', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
               Text(
-                textAlign: TextAlign.justify,
+                // textAlign: TextAlign.justify,
                 'Dear Parent at this point please hand your phone to $selectedChildName to precede. $selectedChildName needs to tab the phone to the magic gold coin tag on top the Jooj Bank. $selectedChildName have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
                 style: const TextStyle(fontSize: 15, color: Colors.black54),
               )

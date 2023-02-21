@@ -51,6 +51,7 @@ final GoRouter _router = GoRouter(
           builder: (BuildContext context, GoRouterState state) {
             return const PinPage(
               type: 'add',
+              selectedChild: 'your child',
             );
           },
         ),

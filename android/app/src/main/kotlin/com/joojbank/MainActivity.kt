@@ -1,4 +1,4 @@
-package com.example.jojo
+package com.joojbank
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterFragmentActivity

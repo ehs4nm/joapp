@@ -4,9 +4,8 @@ import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
 import 'package:another_flushbar/flushbar.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:jooj_bank/pages/waiting_rfid_add.dart';
-import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -91,10 +90,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   @override
   void initState() {
     super.initState();
-
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
     dingPlayer.setAudioSource(AudioSource.asset('assets/sounds/ding.wav'));
     coinDropPlayer.setAudioSource(AudioSource.asset('assets/sounds/coindrop.wav'));
     jackPotPlayer.setAudioSource(AudioSource.asset('assets/sounds/jackpot.wav'));
+
     backgroundAudio.setAudioSource(AudioSource.asset('assets/sounds/background.mp3'));
     backgroundAudio.setLoopMode(LoopMode.one);
 
@@ -380,141 +380,143 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Dialog(
                     backgroundColor: Colors.transparent,
-                    child: Stack(children: [
+                    child: Stack(alignment: AlignmentDirectional.center, children: [
                       Center(child: Image.asset('assets/settings/bg-profile.png')),
-                      Column(children: [
-                        SizedBox(height: height * 0.2),
-                        SizedBox(
-                            height: height * 0.56,
-                            child: Scrollbar(
-                                thickness: 5,
-                                radius: const Radius.circular(5),
-                                thumbVisibility: true,
-                                child: SingleChildScrollView(
-                                    child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                                  parentFullNameWidget(setState),
-                                  // const SizedBox(height: 10, width: 200),
-                                  FutureBuilder(
-                                      future: DatabaseHandler.selectChildren(),
-                                      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                                        if (snapshot.hasData) {
-                                          return Center(
-                                              child: SizedBox(
-                                                  width: 280,
-                                                  child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-                                                    return ListView.builder(
-                                                        physics: const PageScrollPhysics(),
-                                                        scrollDirection: Axis.vertical,
-                                                        shrinkWrap: true,
-                                                        itemCount: snapshot.data?.length,
-                                                        itemBuilder: (BuildContext context, int index) {
-                                                          return Center(
-                                                              child: Stack(children: [
-                                                            Material(
-                                                                color: Colors.transparent,
-                                                                child: TextButton.icon(
-                                                                    label: const Text(''),
-                                                                    onPressed: () {
-                                                                      // Navigator.of(context).pop();
-                                                                    },
-                                                                    icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                                                      Row(children: [
-                                                                        Material(
-                                                                            color: Colors.transparent,
-                                                                            child: InkWell(
-                                                                                focusColor: Colors.transparent,
-                                                                                highlightColor: Colors.transparent,
-                                                                                onTap: () {
-                                                                                  if (snapshot.data?.length != 1) {
-                                                                                    Navigator.of(context).pop();
-                                                                                    openDeleteChild(context, childrenProvider, snapshot.data![index]['id'], snapshot.data![index]['name']);
-                                                                                  }
-                                                                                },
-                                                                                child: Image.asset('assets/settings/${snapshot.data?.length != 1 ? "btn-x.png" : "btn-x-not-active.png"}',
-                                                                                    height: height * 0.0312))),
-                                                                        Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
-                                                                        Material(
-                                                                            color: Colors.transparent,
-                                                                            child: InkWell(
-                                                                                onTap: () {
-                                                                                  setState(() {
-                                                                                    selectedChild = snapshot.data![index]['name'];
-                                                                                    selectedChildId = snapshot.data![index]['id'].toString();
-                                                                                    selectedChildBalance = snapshot.data![index]['balance'].toString();
-                                                                                    if (selectedChildBalance.length < 2) {
-                                                                                      selectedChildBalance = "00$selectedChildBalance";
-                                                                                    } else if (selectedChildBalance.length < 3) {
-                                                                                      selectedChildBalance = "0$selectedChildBalance";
+                      Center(
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                          SizedBox(height: height * 0.12),
+                          SizedBox(
+                              height: height * 0.56,
+                              child: Scrollbar(
+                                  thickness: 5,
+                                  radius: const Radius.circular(5),
+                                  thumbVisibility: true,
+                                  child: SingleChildScrollView(
+                                      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                                    parentFullNameWidget(setState),
+                                    // const SizedBox(height: 10, width: 200),
+                                    FutureBuilder(
+                                        future: DatabaseHandler.selectChildren(),
+                                        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                                          if (snapshot.hasData) {
+                                            return Center(
+                                                child: SizedBox(
+                                                    width: 280,
+                                                    child: StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+                                                      return ListView.builder(
+                                                          physics: const PageScrollPhysics(),
+                                                          scrollDirection: Axis.vertical,
+                                                          shrinkWrap: true,
+                                                          itemCount: snapshot.data?.length,
+                                                          itemBuilder: (BuildContext context, int index) {
+                                                            return Center(
+                                                                child: Stack(children: [
+                                                              Material(
+                                                                  color: Colors.transparent,
+                                                                  child: TextButton.icon(
+                                                                      label: const Text(''),
+                                                                      onPressed: () {
+                                                                        // Navigator.of(context).pop();
+                                                                      },
+                                                                      icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                                                        Row(children: [
+                                                                          Material(
+                                                                              color: Colors.transparent,
+                                                                              child: InkWell(
+                                                                                  focusColor: Colors.transparent,
+                                                                                  highlightColor: Colors.transparent,
+                                                                                  onTap: () {
+                                                                                    if (snapshot.data?.length != 1) {
+                                                                                      Navigator.of(context).pop();
+                                                                                      openDeleteChild(context, childrenProvider, snapshot.data![index]['id'], snapshot.data![index]['name']);
                                                                                     }
-                                                                                    setDigits(selectedChildBalance, '000');
-                                                                                  });
-                                                                                  Navigator.of(context).pop();
-                                                                                },
-                                                                                child: Image.asset(
-                                                                                    'assets/settings/btn-${int.parse(selectedChildId) == snapshot.data![index]['id'] ? "" : "un"}checked.png',
-                                                                                    height: height * 0.0312)))
-                                                                      ]),
-                                                                      Text(snapshot.data![index]['name'],
-                                                                          style: const TextStyle(shadows: <Shadow>[
-                                                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                                          ], fontFamily: 'waytosun', color: Colors.white),
-                                                                          textAlign: TextAlign.center)
-                                                                    ])))
-                                                          ]));
-                                                        });
-                                                  })));
-                                        } else {
-                                          return const Center(child: CircularProgressIndicator());
-                                        }
-                                      }),
-                                  parentEmailWidget(setState),
-                                  Center(
-                                      child: SizedBox(
-                                          height: height * 0.075,
-                                          width: 220,
-                                          child: Center(
-                                              child: Stack(children: [
-                                            Material(
-                                                color: Colors.transparent,
-                                                child: TextButton.icon(
-                                                    label: const Text(''),
-                                                    onPressed: () {
-                                                      Navigator.of(context).pop();
-                                                      openParentPassword();
-                                                    },
-                                                    icon: Stack(alignment: AlignmentDirectional.center, children: [
-                                                      Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
-                                                      const Text('Password',
-                                                          style: TextStyle(shadows: <Shadow>[
-                                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                          ], fontFamily: 'waytosun', color: Colors.white),
-                                                          textAlign: TextAlign.center)
-                                                    ])))
-                                          ])))),
-                                  SizedBox(height: height * 0.0125, width: 200),
-                                  Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                          onTap: () => context.push('/set-pin'),
-                                          child: Stack(alignment: AlignmentDirectional.center, children: [
-                                            Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
-                                            const Text('4 Digit Code',
-                                                style: TextStyle(shadows: <Shadow>[
-                                                  Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                ], fontFamily: 'waytosun', color: Colors.white),
-                                                textAlign: TextAlign.center)
-                                          ]))),
-                                  SizedBox(height: height * 0.0312, width: 200),
-                                  StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-                                    return Material(
+                                                                                  },
+                                                                                  child: Image.asset('assets/settings/${snapshot.data?.length != 1 ? "btn-x.png" : "btn-x-not-active.png"}',
+                                                                                      height: height * 0.0312))),
+                                                                          Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                                                          Material(
+                                                                              color: Colors.transparent,
+                                                                              child: InkWell(
+                                                                                  onTap: () {
+                                                                                    setState(() {
+                                                                                      selectedChild = snapshot.data![index]['name'];
+                                                                                      selectedChildId = snapshot.data![index]['id'].toString();
+                                                                                      selectedChildBalance = snapshot.data![index]['balance'].toString();
+                                                                                      if (selectedChildBalance.length < 2) {
+                                                                                        selectedChildBalance = "00$selectedChildBalance";
+                                                                                      } else if (selectedChildBalance.length < 3) {
+                                                                                        selectedChildBalance = "0$selectedChildBalance";
+                                                                                      }
+                                                                                      setDigits(selectedChildBalance, '000');
+                                                                                    });
+                                                                                    Navigator.of(context).pop();
+                                                                                  },
+                                                                                  child: Image.asset(
+                                                                                      'assets/settings/btn-${int.parse(selectedChildId) == snapshot.data![index]['id'] ? "" : "un"}checked.png',
+                                                                                      height: height * 0.0312)))
+                                                                        ]),
+                                                                        Text(snapshot.data![index]['name'],
+                                                                            style: const TextStyle(shadows: <Shadow>[
+                                                                              Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                                            ], fontFamily: 'waytosun', color: Colors.white),
+                                                                            textAlign: TextAlign.center)
+                                                                      ])))
+                                                            ]));
+                                                          });
+                                                    })));
+                                          } else {
+                                            return const Center(child: CircularProgressIndicator());
+                                          }
+                                        }),
+                                    parentEmailWidget(setState),
+                                    Center(
+                                        child: SizedBox(
+                                            height: height * 0.075,
+                                            width: 220,
+                                            child: Center(
+                                                child: Stack(children: [
+                                              Material(
+                                                  color: Colors.transparent,
+                                                  child: TextButton.icon(
+                                                      label: const Text(''),
+                                                      onPressed: () {
+                                                        Navigator.of(context).pop();
+                                                        openParentPassword();
+                                                      },
+                                                      icon: Stack(alignment: AlignmentDirectional.center, children: [
+                                                        Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                                        const Text('Password',
+                                                            style: TextStyle(shadows: <Shadow>[
+                                                              Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                            ], fontFamily: 'waytosun', color: Colors.white),
+                                                            textAlign: TextAlign.center)
+                                                      ])))
+                                            ])))),
+                                    SizedBox(height: height * 0.0125, width: 200),
+                                    Material(
                                         color: Colors.transparent,
                                         child: InkWell(
-                                          onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
-                                          child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", height: height * 0.05, fit: BoxFit.cover),
-                                        ));
-                                  })
-                                ]))))
-                      ]),
+                                            onTap: () => context.push('/set-pin'),
+                                            child: Stack(alignment: AlignmentDirectional.center, children: [
+                                              Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                              const Text('4 Digit Code',
+                                                  style: TextStyle(shadows: <Shadow>[
+                                                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                  ], fontFamily: 'waytosun', color: Colors.white),
+                                                  textAlign: TextAlign.center)
+                                            ]))),
+                                    SizedBox(height: height * 0.0312, width: 200),
+                                    StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+                                      return Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
+                                            child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", height: height * 0.05, fit: BoxFit.cover),
+                                          ));
+                                    })
+                                  ]))))
+                        ]),
+                      ),
                       Positioned(
                           left: 0,
                           top: 0,
@@ -744,8 +746,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                 return;
                               }
                               Navigator.of(context).pop();
-                              awaitReturnForRfidResult(context);
-                              // await openHandItToChild();
+                              waitForRfid(context);
                             },
                             child: Image.asset('assets/home/btn-pay.png', height: height * 0.045)),
                       ])))
@@ -790,57 +791,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                 return;
                               }
                               Navigator.of(context).pop();
-                              awaitReturnForRfidResult(context);
+                              waitForRfid(context);
                             },
                             child: Image.asset('assets/home/btn-spend.png', height: height * 0.045)),
                       ])))
                 ]))));
   }
 
-  Future openHandItToChild() async {
-    var width = MediaQuery.of(context).size.width;
-    var height = MediaQuery.of(context).size.height;
-    voicePlaying(5500, "Parents at this point please hand the phone to $selectedChild and please read this important note.");
-    var selectedChildName = selectedChild[0].toUpperCase() + selectedChild.substring(1);
-    return showDialog(
-        context: context,
-        builder: (context) => BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: height * 0.125),
-                child: WillPopScope(
-                  onWillPop: () async => false,
-                  child: Dialog(
-                      insetPadding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 80.0),
-                      backgroundColor: Colors.transparent,
-                      child: Stack(fit: StackFit.expand, children: [
-                        Center(child: Image.asset('assets/home/bg-try-again.png')),
-                        Column(children: [
-                          SizedBox(height: height * 0.1),
-                          AttentionText(height: height, width: width, selectedChildName: selectedChildName),
-                        ]),
-                        Positioned(
-                            width: width,
-                            bottom: height * 0.08,
-                            child: Material(
-                                color: Colors.transparent,
-                                child: TextButton.icon(
-                                  style: const ButtonStyle(
-                                    splashFactory: NoSplash.splashFactory,
-                                  ),
-                                  label: const Text(''),
-                                  onPressed: () {
-                                    voicePlayer.stop();
-                                    Navigator.of(context).pop();
-                                    // awaitReturnForRfidResult(context);
-                                  },
-                                  icon: Image.asset('assets/home/btn-start.png', height: height * 0.075),
-                                )))
-                      ])),
-                ))));
-  }
-
-  Future openTryAgin() {
+  Future openTryAgain() {
+    loadMute();
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
     var selectedChildName = selectedChild[0].toUpperCase() + selectedChild.substring(1);
@@ -858,6 +817,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       Column(children: [
                         SizedBox(height: height * 0.1),
                         SizedBox(
+                            height: height * 0.49,
                             child: Padding(
                                 padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.05, width * 0.14, height * 0.025),
                                 child: SingleChildScrollView(
@@ -871,54 +831,58 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                       style: const TextStyle(fontFamily: 'lapsus', fontSize: 20, color: Colors.black54),
                                     )
                                   ],
-                                ))))
-                      ]),
-                      Positioned(
-                        width: width,
-                        bottom: height * 0.06,
-                        child: Center(
+                                )))),
+                        Center(
                           child: Row(mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.center, children: [
-                            BackHomeBtn(width: width, height: height),
+                            Material(
+                                color: Colors.transparent,
+                                child: TextButton.icon(
+                                  label: const Text(''),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: Image.asset('assets/home/btn-try-again-home.png', height: height * 0.075),
+                                )),
                             Material(
                                 color: Colors.transparent,
                                 child: TextButton.icon(
                                   label: const Text(''),
                                   onPressed: () {
                                     Navigator.of(context).pop();
-                                    awaitReturnForRfidResult(context);
+                                    waitForRfid(context);
                                   },
                                   icon: Image.asset('assets/home/btn-try-again.png', height: height * 0.075),
                                 )),
                           ]),
                         ),
-                      )
+                      ]),
                     ])))));
   }
 
-  void awaitReturnForRfidResult(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const PinPage(type: 'spend'))).then((picCorrect) async {
-      print('picCorrect   $picCorrect');
-      if (picCorrect != 'picCorrect') return;
-      await openHandItToChild();
-      await Navigator.of(this.context).push(MaterialPageRoute(builder: (context) => addController.text != '' ? const WaitingRfidAddPage() : const WaitingRfidSpendPage())).then((rfidRead) {
-        print('rfidRead   $rfidRead');
-        switch (rfidRead) {
-          case 'add':
-            addTobalance();
-            addController.clear();
-            break;
-          case 'spend':
-            subtractBalance();
-            spendController.clear();
-            break;
-          default:
-            print('rfidRead   $rfidRead');
+  void waitForRfid(BuildContext context) async {
+    backgroundAudio.pause();
 
-            openTryAgin();
-            break;
-        }
-        noteController.clear();
-      });
+    await Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) => PinPage(
+                  type: addController.text != '' ? 'add' : 'spend',
+                  selectedChild: selectedChild,
+                )))
+        // await openAttention();
+        // await Navigator.of(this.context).push(MaterialPageRoute(builder: (context) => addController.text != '' ? const WaitingRfidAddPage() : const WaitingRfidSpendPage()))
+        .then((rfidRead) {
+      switch (rfidRead) {
+        case 'add':
+          addTobalance();
+          addController.clear();
+          break;
+        case 'spend':
+          subtractBalance();
+          spendController.clear();
+          break;
+        default:
+          openTryAgain();
+          break;
+      }
+      noteController.clear();
     });
   }
 
@@ -940,7 +904,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (int.parse(selectedChildBalance) > 9) secondDigitvisibility = true;
       setDigits(accumulatedBalance.toString(), lastSelectedChildBalance);
     });
-    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => rainPlaying = false)).then((value) async => await voicePlaying(2000, "Grate job $selectedChild!!")).then((value) {
+    Future.delayed(const Duration(milliseconds: 3500), () => setState(() => rainPlaying = false)).then((value) async => await voicePlaying(2000, "Great job $selectedChild!!")).then((value) {
       if (!muted) {
         // backgroundAudio.setLoopMode(LoopMode.one);
         backgroundAudio.play();
@@ -1006,11 +970,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       (int.parse(lastBalance) > 99 || int.parse(balance) > 99) ? firstDigitvisibility = true : firstDigitvisibility = false;
       (int.parse(lastBalance) > 9 || int.parse(balance) > 9) ? secondDigitvisibility = true : secondDigitvisibility = false;
     });
-
-    print('intBalance $intBalance $intLastBalance');
-    print('firstDigit++++ $firstDigit $lastFirstDigit');
-    print('secondDigit++++ $secondDigit $lastSecondDigit');
-    print('thirdDigit++++ $thirdDigit $lastThirdDigit');
 
     if (!(firstDigit == 0 && lastFirstDigit == 0)) {
       if (firstDigit == lastFirstDigit) {
@@ -1238,8 +1197,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                             shrinkWrap: true,
                                             itemCount: snapshot.data?.length,
                                             itemBuilder: (BuildContext context, int index) {
-                                              print(snapshot.data![index]['value']);
-                                              print(snapshot.data![index]['note']);
                                               return SizedBox(
                                                   height: height * .08,
                                                   child: Padding(
@@ -1400,7 +1357,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
     if (!muted) {
       // backgroundAudio.setLoopMode(LoopMode.one);
-      backgroundAudio.play();
+      if (!backgroundAudio.playing) backgroundAudio.play();
     } else {
       backgroundAudio.pause();
     }
@@ -1428,15 +1385,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     await backgroundAudio.setVolume(0.1);
     voicePlayer.setAudioSource(AudioSource.file(filePath));
     voicePlayer.play();
-    Future.delayed(Duration(milliseconds: milliseconds)).then((value) => backgroundAudio.setVolume(1));
+    await Future.delayed(Duration(milliseconds: milliseconds)).then((value) => backgroundAudio.setVolume(1));
   }
 
   voicePlaying(int milliseconds, String text) async {
     try {
-      File file = await service
-          .textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3")
-          .timeout(const Duration(seconds: 4))
-          .catchError((error) => print('Wavenet service is unreachable!:  $error'));
+      File file = await service.textToSpeech(text: text, voiceName: "en-US-Neural2-G", languageCode: "en-US", pitch: 1, speakingRate: 1, audioEncoding: "MP3");
+      // .timeout(const Duration(seconds: 4));
+      // .catchError((error) => print('Wavenet service is unreachable!:  $error'));
       getAudioPlayer(file.path, milliseconds);
     } on FormatException {
       print('Wavenet service is unreachable!');

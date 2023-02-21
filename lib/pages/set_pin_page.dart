@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/Pin_keyboard.dart';
@@ -11,6 +13,7 @@ class SetPinPage extends StatefulWidget {
 }
 
 class _SetPinPageState extends State<SetPinPage> {
+  final LocalAuthentication auth = LocalAuthentication();
   bool confirmed = false;
   int pinLength = 0;
   late String pinCode;
@@ -30,6 +33,23 @@ class _SetPinPageState extends State<SetPinPage> {
   void initState() {
     super.initState();
     getPinCode();
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    bool authenticated = false;
+    try {
+      authenticated = await auth.authenticate(
+          localizedReason: 'Scan your fingerprint to authenticate',
+          options: const AuthenticationOptions(
+            stickyAuth: true,
+            biometricOnly: true,
+          ));
+    } on PlatformException catch (e) {
+      print(e);
+      setState(() => confirmed = false);
+      return;
+    }
+    if (authenticated) setState(() => confirmed = true);
   }
 
   @override
@@ -125,7 +145,7 @@ class _SetPinPageState extends State<SetPinPage> {
                       }
                     },
                     onBiometric: () {
-                      setState(() => confirmed = true);
+                      _authenticateWithBiometrics();
                     },
                   ),
                 ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jooj_bank/pages/waiting_rfid_add.dart';
-import 'package:jooj_bank/pages/waiting_rfid_spend.dart';
+import 'package:jooj_bank/pages/attention_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +9,8 @@ import '../models/Pin_keyboard.dart';
 
 class PinPage extends StatefulWidget {
   final String type;
-  const PinPage({super.key, required this.type});
+  final String selectedChild;
+  const PinPage({super.key, required this.type, required this.selectedChild});
 
   @override
   State<PinPage> createState() => _PinPageState();
@@ -31,7 +31,7 @@ class _PinPageState extends State<PinPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     pinCode = prefs.getString('pinCode') ?? '1234';
     touchId = prefs.getBool('touchId') ?? false;
-    print('$pinCode  , $touchId');
+    print('$pinCode  , $_isAuthenticating');
   }
 
   @override
@@ -77,7 +77,13 @@ class _PinPageState extends State<PinPage> {
     setState(() {
       _authorized = message;
       if (_authorized == 'yes') {
-        Navigator.of(context).pop('picCorrect');
+        // Navigator.of(context).pop('picCorrect');
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => AttentionPage(
+                  type: widget.type,
+                  selectedChild: widget.selectedChild,
+                )));
+
         // Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : const WaitingRfidSpendPage(muted: false)));
       }
     });
@@ -135,7 +141,12 @@ class _PinPageState extends State<PinPage> {
                       },
                       onConfirm: (pin) {
                         if (pinCode == pin) {
-                          Navigator.of(context).pop('picCorrect');
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => AttentionPage(
+                                    type: widget.type,
+                                    selectedChild: widget.selectedChild,
+                                  )));
+
                           // Navigator.of(context).push(MaterialPageRoute(builder: (context) => widget.type == 'add' ? const WaitingRfidAddPage(muted: false) : const WaitingRfidSpendPage(muted: false)));
                           // Navigator.of(context, rootNavigator: true).pop();
 
@@ -170,15 +181,15 @@ class _PinPageState extends State<PinPage> {
                       }),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: MaterialButton(
-                      child: const Text('Back', style: TextStyle(fontFamily: 'waytosun', fontSize: 15, decoration: TextDecoration.underline)),
-                      onPressed: () => setState(() {
-                        Navigator.of(context).pop();
-                      }),
-                    ),
-                  )
+                  // Padding(
+                  //   padding: const EdgeInsets.all(5.0),
+                  //   child: MaterialButton(
+                  //     child: const Text('Back', style: TextStyle(fontFamily: 'waytosun', fontSize: 15, decoration: TextDecoration.underline)),
+                  //     onPressed: () => setState(() {
+                  //       Navigator.of(context).pop();
+                  //     }),
+                  //   ),
+                  // )
                 ],
               ),
             ]),

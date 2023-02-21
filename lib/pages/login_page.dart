@@ -134,11 +134,15 @@ class _LoginPageState extends State<LoginPage> {
     try {
       http.Response? response = await AuthServices.showAction();
       if (response.statusCode == 500 || response.statusCode == 404) {
+        setState(() => waiting = false);
         errorSnackBar(context, 'Network connection error!');
         return;
       }
       Map responseMap = jsonDecode(response.body);
-      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+      if (response.statusCode != 200) {
+        setState(() => waiting = false);
+        return errorSnackBar(context, responseMap.values.first);
+      }
       if (responseMap.values.last.isEmpty) return;
       var actionsJson = jsonDecode(response.body)['actions'] as List;
       List<BankAction> actions = actionsJson.map((e) => BankAction.fromJson(e)).toList();

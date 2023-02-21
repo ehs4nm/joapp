@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:video_player/video_player.dart';
 
@@ -19,7 +20,7 @@ class _WaitingRfidSpendPageState extends State<WaitingRfidSpendPage> {
   @override
   void initState() {
     super.initState();
-
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     _spendController = VideoPlayerController.asset('assets/countdown/count-spend.mp4')
       ..initialize().then((_) {
         setState(() {});
@@ -58,14 +59,16 @@ class _WaitingRfidSpendPageState extends State<WaitingRfidSpendPage> {
 
   void _schedule() {
     _timer = Timer(const Duration(seconds: 10), () {
-      // Navigator.of(context).pop();
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
       Navigator.of(context).pop('');
     });
   }
 
   String _tagRead() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      // Navigator.of(context).pop();
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
       Navigator.of(context).pop('spend');
       NfcManager.instance.stopSession();
       NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {});
