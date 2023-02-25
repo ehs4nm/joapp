@@ -190,8 +190,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
     http.Response response = await AuthServices.register(_parentName, _childName, _email, _password);
     Map responseMap = jsonDecode(response.body);
-    print('response');
-    print(responseMap.values.first[0] == 'The email has already been taken.');
     if (response.statusCode != 200 || responseMap.values.first[0] == 'The email has already been taken.') {
       setState(() => waiting = false);
       if (!mounted) return;
