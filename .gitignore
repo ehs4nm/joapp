@@ -34,6 +34,7 @@ migrate_working_dir/
 /assets/
 .dart_tool/
 
+
 # Symbolication related
 app.*.symbols
 
@@ -44,3 +45,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+/android/
+/web/
+/linux/
+/ios/
