@@ -181,20 +181,16 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   createAccountPressed() async {
-    setState(() => waiting = true);
     bool emailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email);
-    if (!emailValid) {
-      setState(() => waiting = false);
-      return errorSnackBar(context, 'email not valid');
-    }
+    if (!emailValid) return errorSnackBar(context, 'email not valid');
 
+    setState(() => waiting = true);
     http.Response response = await AuthServices.register(_parentName, _childName, _email, _password);
+    setState(() => waiting = false);
     Map responseMap = jsonDecode(response.body);
     if (response.statusCode != 200 || responseMap.values.first[0] == 'The email has already been taken.') {
-      setState(() => waiting = false);
       if (!mounted) return;
-      errorSnackBar(context, responseMap.values.first[0]);
-      return;
+      return errorSnackBar(context, responseMap.values.first[0]);
     }
 
     await DatabaseHandler.deleteTable('children');

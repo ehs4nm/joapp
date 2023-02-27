@@ -120,7 +120,7 @@ class _SetPinPageState extends State<SetPinPage> {
                                   child: const Center(
                                       child: Text('Pin was correct.\nNow enter your new pin.',
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(fontFamily: 'lapsus', fontSize: 25, shadows: <Shadow>[
+                                          style: TextStyle(fontFamily: 'lapsus', fontSize: 18, shadows: <Shadow>[
                                             Shadow(offset: Offset(0.0, 1.0), blurRadius: 20.0, color: Colors.black54),
                                           ])))),
                               behavior: SnackBarBehavior.floating,
@@ -135,7 +135,7 @@ class _SetPinPageState extends State<SetPinPage> {
                                   child: const Center(
                                       child: Text('Pin was NOT correct!\nPlease enter the correct PIN.',
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(fontFamily: 'lapsus', fontSize: 20, shadows: <Shadow>[
+                                          style: TextStyle(fontFamily: 'lapsus', fontSize: 18, shadows: <Shadow>[
                                             Shadow(offset: Offset(0.0, 1.0), blurRadius: 20.0, color: Colors.black54),
                                           ])))),
                               behavior: SnackBarBehavior.floating,

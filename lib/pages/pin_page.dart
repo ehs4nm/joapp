@@ -176,9 +176,19 @@ class _PinPageState extends State<PinPage> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: MaterialButton(
                       child: const Text('FORGET PIN?', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, decoration: TextDecoration.underline)),
-                      onPressed: () => setState(() {
-                        context.push('/login');
-                      }),
+                      onPressed: () {
+                        setState(() {
+                          touchId = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          width: 250,
+                          backgroundColor: Colors.blueGrey,
+                          content: const SizedBox(height: 25, child: Center(child: Text('Please use Fingerprint', style: TextStyle(fontFamily: 'waytosun', fontSize: 20)))),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          // margin: const EdgeInsets.only(bottom: 50, right: 30, left: 30),
+                        ));
+                      },
                     ),
                   ),
                   // Padding(

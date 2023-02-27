@@ -54,7 +54,7 @@ class _AttentionPageState extends State<AttentionPage> {
                         child: Stack(fit: StackFit.expand, children: [
                           Center(child: Image.asset('assets/home/bg-try-again.png', height: height * .8)),
                           Column(children: [
-                            SizedBox(height: height * 0.22),
+                            SizedBox(height: height * 0.25),
                             AttentionText(height: height * 0.875, width: width, selectedChildName: widget.selectedChild),
                             Material(
                                 color: Colors.transparent,
@@ -70,7 +70,7 @@ class _AttentionPageState extends State<AttentionPage> {
                                     // waitForRfid(context);
                                     // voicePlayer.stop();
                                   },
-                                  icon: Image.asset('assets/home/btn-start.png', height: height * 0.075),
+                                  icon: Image.asset('assets/home/btn-start.png', height: height * 0.082),
                                 )),
                           ]),
                         ]))))

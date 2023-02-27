@@ -104,15 +104,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   loginPressed() async {
-    setState(() => waiting = true);
     if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email)) return errorSnackBar(context, 'Enter a valid email address');
 
     if (!(_email.isNotEmpty && _password.isNotEmpty)) return errorSnackBar(context, 'Enter all required fields');
 
     try {
+      setState(() => waiting = true);
       http.Response? response = await AuthServices.login(_email, _password);
+      setState(() => waiting = false);
       if (response == null || response.statusCode == 500 || response.statusCode == 404) {
-        setState(() => waiting = false);
         return errorSnackBar(context, 'Network connection error!');
       }
 
@@ -161,11 +161,13 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => waiting = true);
       http.Response? response = await AuthServices.showChild();
       if (response.statusCode == 500 || response.statusCode == 404) {
+        setState(() => waiting = false);
         errorSnackBar(context, 'Network connection error!');
         return;
       }
       Map responseMap = jsonDecode(response.body);
       if (response.statusCode == 200) {
+        setState(() => waiting = false);
         if (responseMap.values.last.isNotEmpty) {
           var childrenJson = jsonDecode(response.body)['children'] as List;
           List<Child> children = childrenJson.map((e) => Child.fromJson(e)).toList();
@@ -176,6 +178,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         errorSnackBar(context, responseMap.values.first);
+        setState(() => waiting = false);
       }
     } on Exception {
       print('Time out connection 😑');

@@ -206,7 +206,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               right: 20,
               child: Material(
                 color: Colors.transparent,
-                child: IconButton(onPressed: () => openSettings(context, childrenProvider), icon: Image.asset('assets/home/btn-settings.png'), iconSize: height * 0.05),
+                child: IconButton(onPressed: () => openSettings(context, childrenProvider), icon: Image.asset('assets/home/btn-settings.png'), iconSize: height * 0.061),
               )),
           Positioned(
             top: 30,
@@ -219,7 +219,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       _enableMute();
                     },
                     icon: Image.asset('assets/home/btn-mute-${muted ? 'off' : 'on'}.png'),
-                    iconSize: height * 0.05)),
+                    iconSize: height * 0.061)),
           ),
           Positioned(top: height / 2 - height * 0.125, right: -20, child: Lottie.asset('assets/animations/windfan.json', controller: _controller, height: height * 0.2)),
           Positioned(
@@ -652,11 +652,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                     },
                                     icon: Stack(alignment: AlignmentDirectional.center, children: [
                                       Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
-                                      Text(parentEmail,
-                                          style: TextStyle(shadows: const <Shadow>[
-                                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                          ], fontFamily: 'waytosun', color: Colors.white, fontSize: width * 0.03),
-                                          textAlign: TextAlign.center)
+                                      SizedBox(
+                                          // height: height * .14,
+                                          width: width * .35,
+                                          child: SingleChildScrollView(
+                                              physics: const BouncingScrollPhysics(),
+                                              scrollDirection: Axis.horizontal,
+                                              child: Text(parentEmail,
+                                                  overflow: TextOverflow.fade,
+                                                  style: TextStyle(shadows: const <Shadow>[
+                                                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                  ], fontFamily: 'waytosun', color: Colors.white, fontSize: width * 0.045),
+                                                  textAlign: TextAlign.center)))
                                     ])))
                           ]))));
                 } else {
