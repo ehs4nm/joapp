@@ -100,6 +100,20 @@ class _PinPageState extends State<PinPage> {
         body: Stack(
           children: [
             Image.asset('assets/home/bg-clouds.jpg', height: height, fit: BoxFit.cover),
+            Positioned(
+                top: 30,
+                right: 30,
+                child: InkWell(
+                    enableFeedback: false,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Image.asset(
+                      'assets/settings/btn-x.png',
+                      height: 30,
+                    ))),
             Stack(children: [
               if (_supportState == _SupportState.unknown)
                 const CircularProgressIndicator()

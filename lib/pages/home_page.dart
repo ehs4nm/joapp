@@ -458,7 +458,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                                         Text(snapshot.data![index]['name'],
                                                                             style: const TextStyle(shadows: <Shadow>[
                                                                               Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                                            ], fontFamily: 'waytosun', color: Colors.white),
+                                                                            ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                                             textAlign: TextAlign.center)
                                                                       ])))
                                                             ]));
@@ -488,7 +488,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                         const Text('Password',
                                                             style: TextStyle(shadows: <Shadow>[
                                                               Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                            ], fontFamily: 'waytosun', color: Colors.white),
+                                                            ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                             textAlign: TextAlign.center)
                                                       ])))
                                             ])))),
@@ -502,7 +502,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                               const Text('4 Digit Code',
                                                   style: TextStyle(shadows: <Shadow>[
                                                     Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                  ], fontFamily: 'waytosun', color: Colors.white),
+                                                  ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                   textAlign: TextAlign.center)
                                             ]))),
                                     SizedBox(height: height * 0.0312, width: 200),
@@ -615,7 +615,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                       Text(parentName,
                                           style: const TextStyle(shadows: <Shadow>[
                                             Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                          ], fontFamily: 'waytosun', color: Colors.white),
+                                          ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                           textAlign: TextAlign.center)
                                     ])))
                           ]))));
@@ -660,9 +660,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                               scrollDirection: Axis.horizontal,
                                               child: Text(parentEmail,
                                                   overflow: TextOverflow.fade,
-                                                  style: TextStyle(shadows: const <Shadow>[
+                                                  style: const TextStyle(shadows: <Shadow>[
                                                     Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                  ], fontFamily: 'waytosun', color: Colors.white, fontSize: width * 0.045),
+                                                  ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                   textAlign: TextAlign.center)))
                                     ])))
                           ]))));

@@ -62,6 +62,20 @@ class _SetPinPageState extends State<SetPinPage> {
             backgroundColor: Colors.transparent,
             body: Stack(children: [
               Image.asset('assets/home/bg-clouds.jpg', height: height, width: width, fit: BoxFit.cover),
+              Positioned(
+                  top: 30,
+                  right: 30,
+                  child: InkWell(
+                      enableFeedback: false,
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Image.asset(
+                        'assets/settings/btn-x.png',
+                        height: 30,
+                      ))),
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10.0),
