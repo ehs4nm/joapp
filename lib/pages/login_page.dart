@@ -97,6 +97,16 @@ class _LoginPageState extends State<LoginPage> {
                             Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
                           ], fontSize: 15, color: Colors.white)),
                       onPressed: () => context.push('/register'),
+                    )),
+                SizedBox(
+                    height: 40,
+                    child: TextButton(
+                      child: const Text("Forget password?",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(shadows: <Shadow>[
+                            Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                          ], fontSize: 15, color: Colors.white)),
+                      onPressed: () => forgetPass(),
                     ))
               ])))),
           Center(child: Visibility(maintainSize: true, maintainAnimation: true, maintainState: true, visible: waiting, child: const CircularProgressIndicator())),
@@ -195,5 +205,28 @@ class _LoginPageState extends State<LoginPage> {
   void setFirstLoad() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('firstLoad', true);
+  }
+
+  forgetPass() async {
+    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email)) return errorSnackBar(context, 'Enter a valid email address');
+
+    if (!(_email.isNotEmpty)) return errorSnackBar(context, 'Enter your email address please');
+    try {
+      setState(() => waiting = true);
+      http.Response? response = await AuthServices.sendPassToEmail(_email);
+      print(response.body);
+      setState(() => waiting = false);
+      if (response.statusCode == 500 || response.statusCode == 404) {
+        return errorSnackBar(context, 'Network connection error!');
+      }
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+
+      return errorSnackBar(context, 'Check your email for instructions!');
+    } on Exception {
+      print('Time out connection 😑');
+    }
+    setState(() => waiting = false);
   }
 }

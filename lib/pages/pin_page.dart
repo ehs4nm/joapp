@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jooj_bank/Services/auth_services.dart';
+import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/pages/attention_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/Pin_keyboard.dart';
 
@@ -194,6 +199,7 @@ class _PinPageState extends State<PinPage> {
                         setState(() {
                           touchId = true;
                         });
+                        forgetPass();
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           width: 250,
                           backgroundColor: Colors.blueGrey,
@@ -221,6 +227,22 @@ class _PinPageState extends State<PinPage> {
         ),
       ),
     );
+  }
+
+  forgetPass() async {
+    try {
+      http.Response? response = await AuthServices.sendPin();
+      if (response.statusCode == 500 || response.statusCode == 404) {
+        return errorSnackBar(context, 'Network connection error!');
+      }
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+
+      return errorSnackBar(context, 'Check your email for instructions!');
+    } on Exception {
+      print('Time out connection 😑');
+    }
   }
 }
 

@@ -97,6 +97,34 @@ class AuthServices {
     return response;
   }
 
+  static Future<http.Response> sendPassToEmail(String email) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+    String? pinCode = localStorage.getString('pinCode');
+
+    Map data = {"email": email, "pin": pinCode, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}sendPass');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
+  static Future<http.Response> sendPin() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+    String? pinCode = localStorage.getString('pinCode');
+
+    Map data = {"pin": pinCode, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}sendPin');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
   static Future<http.Response> updateChildBalance(String name, String balance) async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');
