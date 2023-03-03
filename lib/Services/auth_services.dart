@@ -203,4 +203,21 @@ class AuthServices {
 
     return null;
   }
+
+  static Future<http.Response?> deleteAccount() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+    Map data = {"token": token};
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}auth/delete');
+    localStorage.remove('token');
+    // ignore: unused_local_variable
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    // var res = json.decode(response.body);
+    token = localStorage.getString('token');
+    print('token    $token');
+
+    return null;
+  }
 }

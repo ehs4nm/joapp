@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/Services/auth_services.dart';
 import 'package:jooj_bank/Services/globals.dart';
 import 'package:jooj_bank/pages/attention_page.dart';

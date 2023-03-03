@@ -505,6 +505,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                   ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                   textAlign: TextAlign.center)
                                             ]))),
+                                    SizedBox(height: height * 0.0125, width: 200),
+                                    Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                            onTap: () async {
+                                              Navigator.of(context).pop();
+                                              areYouSure(context);
+                                            },
+                                            child: Stack(alignment: AlignmentDirectional.center, children: [
+                                              Image.asset('assets/home/btn-big-blue.png', height: height * 0.05),
+                                              const Text('Delete account',
+                                                  style: TextStyle(shadows: <Shadow>[
+                                                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                  ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
+                                                  textAlign: TextAlign.center)
+                                            ]))),
                                     SizedBox(height: height * 0.0312, width: 200),
                                     StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
                                       return Material(
@@ -1404,5 +1420,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     } on FormatException {
       print('Wavenet service is unreachable!');
     }
+  }
+
+  areYouSure(context) {
+    var height = MediaQuery.of(context).size.height;
+    return showDialog(
+        context: context,
+        builder: (context) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                child: Form(
+                    key: _key,
+                    child: Stack(children: [
+                      Center(child: Image.asset('assets/home/bg-remove-child.png', height: height * 0.375)),
+                      Center(
+                          child: Text(
+                        'Are you sure?',
+                        style: TextStyle(shadows: const <Shadow>[
+                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.white54),
+                        ], fontFamily: 'waytosun', color: Colors.blueGrey.shade900, fontSize: 25),
+                        textAlign: TextAlign.center,
+                      )),
+                      Center(
+                          child: Column(children: [
+                        SizedBox(height: height * 0.48),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InkWell(
+                                  onTap: () {
+                                    try {
+                                      backgroundAudio.stop();
+                                      AuthServices.deleteAccount();
+                                      // AuthServices.logout();
+                                      context.push('/login');
+                                    } catch (e) {
+                                      print(e);
+                                    }
+                                  },
+                                  child: Stack(alignment: AlignmentDirectional.center, children: [
+                                    Image.asset('assets/settings/number-field-bg.png', height: height * 0.04),
+                                    const Text('Yes',
+                                        style: TextStyle(shadows: <Shadow>[
+                                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                        ], fontFamily: 'waytosun', fontSize: 15, color: Colors.white),
+                                        textAlign: TextAlign.center)
+                                  ])),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InkWell(
+                                  onTap: () => Navigator.of(context).pop(),
+                                  child: Stack(alignment: AlignmentDirectional.center, children: [
+                                    Image.asset('assets/settings/number-field-bg.png', height: height * 0.04),
+                                    const Text('No',
+                                        style: TextStyle(shadows: <Shadow>[
+                                          Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                        ], fontFamily: 'waytosun', fontSize: 15, color: Colors.white),
+                                        textAlign: TextAlign.center)
+                                  ])),
+                            ),
+                          ],
+                        )
+                      ]))
+                    ])))));
   }
 }
