@@ -27,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void initState() {
     super.initState();
-    _tagRead();
+    // _tagRead();
     setFirstLoad();
     _enableTouchId(true);
   }
