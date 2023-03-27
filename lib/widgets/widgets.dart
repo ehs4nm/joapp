@@ -37,15 +37,15 @@ class NoteField extends StatelessWidget {
         child: SizedBox(
             width: width * 0.5,
             child: Stack(alignment: AlignmentDirectional.centerStart, children: [
-              Image.asset('assets/settings/note-field-bg.png', height: height * .04),
+              Image.asset('assets/settings/note-field-bg-l.png', height: height * .04),
               Padding(
                   padding: const EdgeInsets.only(left: 9.0),
                   child: TextField(
-                    inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                    style: TextStyle(fontFamily: 'lapsus', color: Colors.white, fontSize: width * .038),
+                    inputFormatters: [LengthLimitingTextInputFormatter(19)],
+                    style: TextStyle(fontFamily: 'waytosun', color: Colors.black, fontSize: width * .038),
                     decoration: InputDecoration(
-                        hintStyle: TextStyle(fontFamily: 'lapsus', color: Colors.white54, fontSize: width * .038),
-                        labelStyle: TextStyle(fontFamily: 'lapsus', fontSize: width * .038),
+                        hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54, fontSize: width * .038),
+                        labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * .038),
                         border: InputBorder.none,
                         hintText: 'Enter your note'),
                     controller: controller,
@@ -82,12 +82,12 @@ class NumberField extends StatelessWidget {
                     autofocus: true,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-                    style: const TextStyle(fontFamily: 'lapsus', color: Colors.white),
+                    style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
                     decoration: InputDecoration(
-                        prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'lapsus', color: Colors.white, fontSize: width * .04)),
+                        prefixIcon: Text("\$ ", style: TextStyle(fontFamily: 'waytosun', color: Colors.white, fontSize: width * .04)),
                         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 14),
-                        hintStyle: TextStyle(fontFamily: 'lapsus', color: Colors.white54, fontSize: width * .035),
-                        labelStyle: TextStyle(fontFamily: 'lapsus', fontSize: width * .035),
+                        hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54, fontSize: width * .035),
+                        labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * .035),
                         border: InputBorder.none,
                         hintText: '0'),
                     controller: controller,
@@ -124,10 +124,10 @@ class SettingsField extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 8.0),
                 child: TextField(
                   autofocus: true,
-                  style: const TextStyle(fontFamily: 'lapsus', color: Colors.white),
+                  style: TextStyle(fontFamily: 'waytosun', color: Colors.blueGrey.shade800),
                   decoration: InputDecoration(
-                    hintStyle: const TextStyle(fontFamily: 'lapsus', color: Colors.white),
-                    labelStyle: const TextStyle(fontFamily: 'lapsus'),
+                    hintStyle: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                    labelStyle: const TextStyle(fontFamily: 'waytosun'),
                     border: InputBorder.none,
                     hintText: hintText,
                   ),
@@ -168,9 +168,9 @@ class PassField extends StatelessWidget {
                         enableSuggestions: false,
                         autocorrect: false,
                         autofocus: true,
-                        style: const TextStyle(fontFamily: 'lapsus', color: Colors.white),
+                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
                         decoration: const InputDecoration(
-                          hintStyle: TextStyle(fontFamily: 'lapsus', color: Colors.white),
+                          hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white),
                           border: InputBorder.none,
                           hintText: 'min 8 charecters',
                         ),
@@ -200,10 +200,10 @@ class AttentionText extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(width * 0.14, height * 0.05, width * 0.14, 5),
             child: SingleChildScrollView(
                 child: Column(mainAxisSize: MainAxisSize.max, children: [
-              Text('Attention!\n', style: TextStyle(fontFamily: 'lapsus', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
+              Text('Attention!\n', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
               Text(
                 // textAlign: TextAlign.justify,
-                'Dear Parent at this point please hand your phone to $selectedChildName to precede. $selectedChildName needs to tab the phone to the magic gold coin tag on top the Jooj Bank. $selectedChildName have 10 seconds to do this action. Are you ready? If you are then please press ok to start the 10 seconds timer.',
+                'Dear parent, please hand your phone to $selectedChildName. $selectedChildName needs to tap the phone to the magic gold coin tag on top of the Jooj Bank. $selectedChildName has 10 seconds to complete this action. Are you ready? If so, please press OK to start the 10-second timer.',
                 style: const TextStyle(fontSize: 15, color: Colors.black54),
               )
             ]))));

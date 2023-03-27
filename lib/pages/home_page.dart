@@ -674,12 +674,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                           child: SingleChildScrollView(
                                               physics: const BouncingScrollPhysics(),
                                               scrollDirection: Axis.horizontal,
-                                              child: Text(parentEmail,
-                                                  overflow: TextOverflow.fade,
-                                                  style: const TextStyle(shadows: <Shadow>[
-                                                    Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
-                                                  ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
-                                                  textAlign: TextAlign.center)))
+                                              child: Row(
+                                                children: [
+                                                  Text(parentEmail.split('@')[0],
+                                                      overflow: TextOverflow.fade,
+                                                      style: const TextStyle(shadows: <Shadow>[
+                                                        Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                      ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
+                                                      textAlign: TextAlign.center),
+                                                  const Text('@',
+                                                      overflow: TextOverflow.fade,
+                                                      style: TextStyle(shadows: <Shadow>[
+                                                        Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                      ], fontFamily: 'waytosun', fontSize: 14, color: Colors.white),
+                                                      textAlign: TextAlign.center),
+                                                  Text(parentEmail.split('@')[1],
+                                                      overflow: TextOverflow.fade,
+                                                      style: const TextStyle(shadows: <Shadow>[
+                                                        Shadow(offset: Offset(1.0, 1.0), blurRadius: 10.0, color: Colors.black),
+                                                      ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
+                                                      textAlign: TextAlign.center),
+                                                ],
+                                              )))
                                     ])))
                           ]))));
                 } else {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:jooj_bank/pages/register_page.dart';
+import 'package:jooj_bank/pages/intro_app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _playVideo() async {
     _controller.play();
-    await Future.delayed(const Duration(milliseconds: 6500)).then((value) => Navigator.push(context, MaterialPageRoute(builder: (context) => isAuth ? const HomePage() : const RegisterPage())));
+    await Future.delayed(const Duration(milliseconds: 6500)).then((value) => Navigator.push(context, MaterialPageRoute(builder: (context) => isAuth ? const HomePage() : const IntroApp())));
   }
 
   @override

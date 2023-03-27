@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/models/models.dart';
-import 'package:jooj_bank/pages/intro_app.dart';
+import 'package:jooj_bank/pages/home_page.dart';
 import 'package:jooj_bank/providers/children_provider.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // _tagRead();
+    _tagRead();
     setFirstLoad();
   }
 
@@ -130,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
 
       setState(() => waiting = true);
-      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const IntroApp()));
+      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
       await extractActions();
       await extractChildren();
     } on Exception {
@@ -217,6 +217,7 @@ class _LoginPageState extends State<LoginPage> {
       print(response.body);
       setState(() => waiting = false);
       if (response.statusCode == 500 || response.statusCode == 404) {
+        print(response.body);
         return errorSnackBar(context, 'Network connection error!');
       }
 

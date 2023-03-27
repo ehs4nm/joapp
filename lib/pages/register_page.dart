@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jooj_bank/models/database_handler.dart';
-import 'package:jooj_bank/pages/intro_app.dart';
+import 'package:jooj_bank/pages/home_page.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
@@ -27,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void initState() {
     super.initState();
-    // _tagRead();
+    _tagRead();
     setFirstLoad();
     _enableTouchId(true);
   }
@@ -199,7 +199,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => waiting = false);
     await DatabaseHandler.insert('parents', {'fullName': _parentName, 'email': _email, 'pin': pinCode})
         .then((_) => setState(() => waiting = false))
-        .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const IntroApp())));
+        .then((value) => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage())));
   }
 
   _enableTouchId(state) async {

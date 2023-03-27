@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:jooj_bank/Services/auth_services.dart';
+import 'package:jooj_bank/Services/globals.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/Pin_keyboard.dart';
 
@@ -163,7 +168,42 @@ class _SetPinPageState extends State<SetPinPage> {
                     },
                   ),
                 ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: MaterialButton(
+                      child: const Text('FORGET PIN?', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, decoration: TextDecoration.underline)),
+                      onPressed: () {
+                        forgetPass();
+                        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        //   width: 250,
+                        //   backgroundColor: Colors.blueGrey,
+                        //   content: const SizedBox(height: 25, child: Center(child: Text('Remember you may use Fingerprint', style: TextStyle(fontFamily: 'waytosun', fontSize: 13)))),
+                        //   behavior: SnackBarBehavior.floating,
+                        //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        //   // margin: const EdgeInsets.only(bottom: 50, right: 30, left: 30),
+                        // ));
+                      },
+                    ),
+                  ),
+                )
               ])
             ])));
+  }
+
+  forgetPass() async {
+    try {
+      http.Response? response = await AuthServices.sendPin();
+      if (response.statusCode == 500 || response.statusCode == 404) {
+        return errorSnackBar(context, 'Network connection error!');
+      }
+
+      Map responseMap = jsonDecode(response.body);
+      if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
+
+      return errorSnackBar(context, 'Check your email for instructions!');
+    } on Exception {
+      print('Time out connection 😑');
+    }
   }
 }
