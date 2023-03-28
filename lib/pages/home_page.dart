@@ -125,7 +125,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         parentName = value[0].fullName!;
         parentEmail = value[0].email!;
         parentPin = value[0].pin!;
-        print('parentName $parentName');
       });
     });
     loadChild().then((value) {
@@ -985,7 +984,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
     });
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, addController.text, noteController.text, DateTime.now().toString());
+    await AuthServices.sendAction(selectedChildId, addController.text, "-${spendController.text}", DateTime.now().toString());
     await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
 
     spendController.clear();

@@ -134,8 +134,8 @@ class _LoginPageState extends State<LoginPage> {
       await DatabaseHandler.insert('parents', {'fullName': responseMap.values.first['name'], 'email': _email, 'pin': '1234'});
 
       Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
-      await extractActions();
       await extractChildren();
+      await extractActions();
     } on Exception {
       print('Time out connection 😑');
     }
@@ -159,6 +159,8 @@ class _LoginPageState extends State<LoginPage> {
       if (responseMap.values.last.isEmpty) return;
       var actionsJson = jsonDecode(response.body)['actions'] as List;
       List<BankAction> actions = actionsJson.map((e) => BankAction.fromJson(e)).toList();
+      print('parentName ${actions.length}' + actions.toString());
+
       await DatabaseHandler.deleteTable('actions');
       for (var i = 0; i < actions.length; i++) {
         await DatabaseHandler.insert('actions', actions[i].toMap());
@@ -173,6 +175,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       setState(() => waiting = true);
       http.Response? response = await AuthServices.showChild();
+
       if (response.statusCode == 500 || response.statusCode == 404) {
         setState(() => waiting = false);
         errorSnackBar(context, 'Network connection error!');
@@ -201,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
   void _tagRead() async {
     if (await NfcManager.instance.isAvailable() == false) return;
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      print('ok');
+      print('ok _tagRead');
     });
   }
 
@@ -217,10 +220,8 @@ class _LoginPageState extends State<LoginPage> {
     try {
       setState(() => waiting = true);
       http.Response? response = await AuthServices.sendPassToEmail(_email);
-      print(response.body);
       setState(() => waiting = false);
       if (response.statusCode == 500 || response.statusCode == 404) {
-        print(response.body);
         return errorSnackBar(context, 'Network connection error!');
       }
 

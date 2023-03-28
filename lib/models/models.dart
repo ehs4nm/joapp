@@ -42,14 +42,14 @@ class Parent {
 class BankAction {
   int? id;
   int? childId;
-  int? action;
+  int? value;
   String? note;
   String? createdAt;
 
   BankAction({
     this.id,
     this.childId,
-    this.action,
+    this.value,
     this.note,
     this.createdAt,
   });
@@ -60,7 +60,7 @@ class BankAction {
     return {
       'id': id,
       'childId': childId,
-      'action': action,
+      'value': value,
       'note': note,
       'createdAt': createdAt,
     };
@@ -70,7 +70,7 @@ class BankAction {
     return BankAction(
       id: json['id'],
       childId: json['childId'],
-      action: json['action'],
+      value: json['value'],
       note: json['note'],
       createdAt: json['createdAt'],
     );
@@ -80,6 +80,6 @@ class BankAction {
   // each Child when using the print statement.
   @override
   String toString() {
-    return 'Action{id: $id, childId: $childId, action: $action, note: $note, createdAt: $createdAt}';
+    return 'Action{id: $id, childId: $childId, value: $value, note: $note, createdAt: $createdAt}';
   }
 }

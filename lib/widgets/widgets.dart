@@ -37,12 +37,12 @@ class NoteField extends StatelessWidget {
         child: SizedBox(
             width: width * 0.5,
             child: Stack(alignment: AlignmentDirectional.centerStart, children: [
-              Image.asset('assets/settings/note-field-bg-l.png', height: height * .04),
+              Image.asset('assets/settings/note-field-bg.png', height: height * .04),
               Padding(
                   padding: const EdgeInsets.only(left: 9.0),
                   child: TextField(
                     inputFormatters: [LengthLimitingTextInputFormatter(19)],
-                    style: TextStyle(fontFamily: 'waytosun', color: Colors.black, fontSize: width * .038),
+                    style: TextStyle(fontFamily: 'waytosun', color: Colors.white, fontSize: width * .035),
                     decoration: InputDecoration(
                         hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white54, fontSize: width * .038),
                         labelStyle: TextStyle(fontFamily: 'waytosun', fontSize: width * .038),
