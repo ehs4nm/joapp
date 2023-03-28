@@ -125,6 +125,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         parentName = value[0].fullName!;
         parentEmail = value[0].email!;
         parentPin = value[0].pin!;
+        print('parentName $parentName');
       });
     });
     loadChild().then((value) {
@@ -734,6 +735,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                       if (newChildController.text == '') return;
                                       Navigator.of(context).pop();
                                       Child newchild = await childrenProvider.insertDatabase(newChildController.text, 0, '');
+                                      await AuthServices.sendChild(newChildController.text, '0', '');
                                       setState(() {
                                         selectedChildId = newchild.id.toString();
                                         selectedChild = newchild.name;
@@ -951,7 +953,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
 
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-
+    await AuthServices.sendAction(selectedChildId, addController.text, noteController.text, DateTime.now().toString());
+    await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
     addController.clear();
     noteController.clear();
   }
@@ -982,6 +985,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
     });
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
+    await AuthServices.sendAction(selectedChildId, addController.text, noteController.text, DateTime.now().toString());
+    await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
 
     spendController.clear();
     noteController.clear();

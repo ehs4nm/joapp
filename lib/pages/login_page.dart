@@ -130,6 +130,9 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode != 200) return errorSnackBar(context, responseMap.values.first);
 
       setState(() => waiting = true);
+      await DatabaseHandler.deleteTable('parents');
+      await DatabaseHandler.insert('parents', {'fullName': responseMap.values.first['name'], 'email': _email, 'pin': '1234'});
+
       Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
       await extractActions();
       await extractChildren();
