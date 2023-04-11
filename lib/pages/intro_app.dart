@@ -78,7 +78,7 @@ class _IntroAppState extends State<IntroApp> {
                       style: TextStyle(fontFamily: 'lapsus', fontSize: 28, fontWeight: FontWeight.w900, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
                   const Text(
                       textAlign: TextAlign.left,
-                      '\nSigning up for the JooJ Bank app must be done by parents. The money that kids earn from their parents for doing chores or as a reward is just pretend money. However, to make this experience more realistic for children, we have decided to make all transactions verified by parents before they are completed. Therefore, we believe that adding or withdrawing money should be supervised by parents using their assigned four-digit pin or fingerprint verification.',
+                      '\nSigning up for the Jooj Bank app must be done by parents. The money that kids earn from their parents for doing chores or as a reward is just pretend money. However, to make this experience more realistic for children, we have decided to make all transactions verified by parents before they are completed. Therefore, we believe that adding or withdrawing money should be supervised by parents using their assigned four-digit pin or fingerprint verification.',
                       style: TextStyle(fontSize: 15, color: Colors.black54)),
                 ])))
       ])),

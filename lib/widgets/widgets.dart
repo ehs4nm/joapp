@@ -168,7 +168,7 @@ class PassField extends StatelessWidget {
                         enableSuggestions: false,
                         autocorrect: false,
                         autofocus: true,
-                        style: const TextStyle(fontFamily: 'waytosun', color: Colors.white),
+                        style: const TextStyle(fontFamily: 'waytosun', color: Color.fromRGBO(255, 255, 255, 1)),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(fontFamily: 'waytosun', color: Colors.white),
                           border: InputBorder.none,
@@ -203,7 +203,7 @@ class AttentionText extends StatelessWidget {
               Text('Attention!\n', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, color: Colors.blueGrey.shade800), textAlign: TextAlign.center),
               Text(
                 // textAlign: TextAlign.justify,
-                'Dear parent, please hand your phone to $selectedChildName. $selectedChildName needs to tap the phone to the magic gold coin tag on top of the Jooj Bank. $selectedChildName has 10 seconds to complete this action. Are you ready? If so, please press OK to start the 10-second timer.',
+                'Dear parent, please hand your phone to ${selectedChildName[0].toUpperCase() + selectedChildName.substring(1)}. ${selectedChildName[0].toUpperCase() + selectedChildName.substring(1)} needs to tap the phone to the magic gold coin tag on top of the Jooj Bank. ${selectedChildName[0].toUpperCase() + selectedChildName.substring(1)} has 10 seconds to complete this action. Are you ready? If so, please press OK to start the 10-second timer.',
                 style: const TextStyle(fontSize: 15, color: Colors.black54),
               )
             ]))));
