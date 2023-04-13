@@ -174,15 +174,16 @@ class _SetPinPageState extends State<SetPinPage> {
                     child: MaterialButton(
                       child: const Text('FORGET PIN?', style: TextStyle(fontFamily: 'waytosun', fontSize: 30, decoration: TextDecoration.underline)),
                       onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          width: 250,
+                          backgroundColor: Colors.blueGrey,
+                          content: const SizedBox(
+                              height: 35, child: Center(child: Text('We have sent you an email. and Remember you may use Fingerprint.', style: TextStyle(fontFamily: 'waytosun', fontSize: 13)))),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          // margin: const EdgeInsets.only(bottom: 50, right: 30, left: 30),
+                        ));
                         forgetPass();
-                        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        //   width: 250,
-                        //   backgroundColor: Colors.blueGrey,
-                        //   content: const SizedBox(height: 25, child: Center(child: Text('Remember you may use Fingerprint', style: TextStyle(fontFamily: 'waytosun', fontSize: 13)))),
-                        //   behavior: SnackBarBehavior.floating,
-                        //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        //   // margin: const EdgeInsets.only(bottom: 50, right: 30, left: 30),
-                        // ));
                       },
                     ),
                   ),
@@ -194,6 +195,7 @@ class _SetPinPageState extends State<SetPinPage> {
   forgetPass() async {
     try {
       http.Response? response = await AuthServices.sendPin();
+      print('object $response');
       if (response.statusCode == 500 || response.statusCode == 404) {
         return errorSnackBar(context, 'Network connection error!');
       }

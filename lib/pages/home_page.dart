@@ -384,7 +384,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       Center(child: Image.asset('assets/settings/bg-profile.png')),
                       Center(
                         child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                          SizedBox(height: height * 0.12),
+                          SizedBox(height: height * 0.06),
                           SizedBox(
                               height: height * 0.56,
                               child: Scrollbar(
@@ -521,13 +521,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                   ], fontFamily: 'waytosun', fontSize: 18, color: Colors.white),
                                                   textAlign: TextAlign.center)
                                             ]))),
-                                    SizedBox(height: height * 0.0312, width: 200),
+                                    SizedBox(height: height * 0.025, width: 200),
                                     StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
                                       return Material(
                                           color: Colors.transparent,
                                           child: InkWell(
                                             onTap: () => _enableTouchId().then((value) => setState(() => touchId)),
-                                            child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", height: height * 0.05, fit: BoxFit.cover),
+                                            child: Image.asset(touchId ? "assets/settings/btn-enable-touch.png" : "assets/settings/btn-disable-touch.png", height: height * 0.04, fit: BoxFit.cover),
                                           ));
                                     })
                                   ]))))
