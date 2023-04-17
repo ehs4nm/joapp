@@ -994,65 +994,75 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   Future<bool> setDigits(String balance, String lastBalance) async {
     List<double> numbersArray = [0, .12, .21, .3, .4, .5, .58, .67, .76, .86];
 
-    List<int> intBalance = digitsExtract(balance);
-    List<int> intLastBalance = digitsExtract(lastBalance);
+    if (int.parse(balance) == 0 && int.parse(lastBalance) == 0) {
+      _secondController.reset();
+      _firstController.reset();
+      _thirdController.reset();
+      secondDigitvisibility = false;
+      firstDigitvisibility = false;
+      setState(() => firstDigitvisibility = false);
+      setState(() => secondDigitvisibility = false);
+      await _thirdController.animateTo(numbersArray[0]);
+    } else {
+      List<int> intBalance = digitsExtract(balance);
+      List<int> intLastBalance = digitsExtract(lastBalance);
 
-    int firstDigit = intBalance[0];
-    int secondDigit = intBalance[1];
-    int thirdDigit = intBalance[2];
+      int firstDigit = intBalance[0];
+      int secondDigit = intBalance[1];
+      int thirdDigit = intBalance[2];
 
-    int lastFirstDigit = intLastBalance[0];
-    int lastSecondDigit = intLastBalance[1];
-    int lastThirdDigit = intLastBalance[2];
+      int lastFirstDigit = intLastBalance[0];
+      int lastSecondDigit = intLastBalance[1];
+      int lastThirdDigit = intLastBalance[2];
 
-    _firstController = _digitsController[9];
-    _secondController = _digitsController[8];
-    _thirdController = _digitsController[7];
+      _firstController = _digitsController[9];
+      _secondController = _digitsController[8];
+      _thirdController = _digitsController[7];
 
-    setState(() {
-      (int.parse(lastBalance) > 99 || int.parse(balance) > 99) ? firstDigitvisibility = true : firstDigitvisibility = false;
-      (int.parse(lastBalance) > 9 || int.parse(balance) > 9) ? secondDigitvisibility = true : secondDigitvisibility = false;
-    });
+      setState(() {
+        (int.parse(lastBalance) > 99 || int.parse(balance) > 99) ? firstDigitvisibility = true : firstDigitvisibility = false;
+        (int.parse(lastBalance) > 9 || int.parse(balance) > 9) ? secondDigitvisibility = true : secondDigitvisibility = false;
+      });
 
-    if (!(firstDigit == 0 && lastFirstDigit == 0)) {
-      if (firstDigit == lastFirstDigit) {
-      } else if ((firstDigit - lastFirstDigit).abs() < 3) {
-        await _firstController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
-        _firstController.reset();
-        _firstController.animateTo(numbersArray[firstDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+      if (!(firstDigit == 0 && lastFirstDigit == 0)) {
+        if (firstDigit == lastFirstDigit) {
+        } else if ((firstDigit - lastFirstDigit).abs() < 3) {
+          await _firstController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+          _firstController.reset();
+          _firstController.animateTo(numbersArray[firstDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+        } else {
+          _firstController
+              .animateTo(numbersArray[firstDigit])
+              .then((_) => firstDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
+              .then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+        }
+      }
+
+      if (secondDigit == 0) {
+        setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+      }
+      if (secondDigit == lastSecondDigit) {
+        setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
+      } else if ((secondDigit - lastSecondDigit).abs() < 3) {
+        await _secondController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+        _secondController.reset();
+        _secondController.animateTo(numbersArray[secondDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
       } else {
-        _firstController
-            .animateTo(numbersArray[firstDigit])
-            .then((_) => firstDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
-            .then((_) => setState(() => int.parse(selectedChildBalance) > 99 ? firstDigitvisibility = true : firstDigitvisibility = false));
+        _secondController
+            .animateTo(numbersArray[secondDigit])
+            .then((_) => secondDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
+            .then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
+      }
+
+      if (thirdDigit == lastThirdDigit) {
+      } else if ((thirdDigit - lastThirdDigit).abs() < 3) {
+        await _thirdController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
+        _thirdController.reset();
+        _thirdController.animateTo(numbersArray[thirdDigit]);
+      } else {
+        await _thirdController.animateTo(numbersArray[thirdDigit]);
       }
     }
-
-    if (secondDigit == 0) {
-      setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
-    }
-    if (secondDigit == lastSecondDigit) {
-      setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false);
-    } else if ((secondDigit - lastSecondDigit).abs() < 3) {
-      await _secondController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
-      _secondController.reset();
-      _secondController.animateTo(numbersArray[secondDigit]).then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
-    } else {
-      _secondController
-          .animateTo(numbersArray[secondDigit])
-          .then((_) => secondDigit > 1 ? Future.delayed(const Duration(milliseconds: 0)) : Future.delayed(const Duration(milliseconds: 500)))
-          .then((_) => setState(() => int.parse(selectedChildBalance) > 9 ? secondDigitvisibility = true : secondDigitvisibility = false));
-    }
-
-    if (thirdDigit == lastThirdDigit) {
-    } else if ((thirdDigit - lastThirdDigit).abs() < 3) {
-      await _thirdController.animateTo(numbersArray[9], curve: Curves.slowMiddle, duration: const Duration(milliseconds: 800));
-      _thirdController.reset();
-      _thirdController.animateTo(numbersArray[thirdDigit]);
-    } else {
-      await _thirdController.animateTo(numbersArray[thirdDigit]);
-    }
-
     return true;
   }
 
@@ -1347,6 +1357,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                               label: const Text(''),
                               onPressed: () {
                                 childrenProvider.deleteChildById(childIdToBeRemoved, childNameToBeRemoved);
+                                AuthServices.deleteChildById(newChildController.text);
                                 loadChild().then((value) {
                                   setState(() {
                                     selectedChildId = value[0].id!.toString();

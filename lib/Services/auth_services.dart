@@ -84,6 +84,19 @@ class AuthServices {
     return response;
   }
 
+  static Future<http.Response> deleteChildById(String name) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    Map data = {"childName": name, "token": token};
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}child/delete');
+    http.Response response = await http.post(url, headers: headers, body: body);
+
+    return response;
+  }
+
   static Future<http.Response> updateChildRFID(String name, String rfid) async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');

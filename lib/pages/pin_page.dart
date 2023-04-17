@@ -198,7 +198,7 @@ class _PinPageState extends State<PinPage> {
                         setState(() {
                           touchId = true;
                         });
-                        print('object');
+
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           width: 250,
                           backgroundColor: Colors.blueGrey,
