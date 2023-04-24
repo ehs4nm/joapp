@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jooj_bank/models/database_handler.dart';
 import 'package:jooj_bank/pages/home_page.dart';
+import 'package:jooj_bank/providers/children_provider.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import 'package:go_router/go_router.dart';
@@ -181,6 +183,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   createAccountPressed() async {
+    final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
+
     bool emailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_email);
     if (!emailValid) return errorSnackBar(context, 'email not valid');
 
@@ -195,7 +199,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
     await DatabaseHandler.deleteTable('children');
     await DatabaseHandler.deleteTable('parents');
-    await DatabaseHandler.insert('children', {'name': _childName, 'balance': '0', 'rfid': ''});
+    await childrenProvider.insertDatabase(_childName, 0, '');
+    // await DatabaseHandler.insert('children', {'name': _childName, 'balance': '0', 'rfid': ''});
     setState(() => waiting = false);
     await DatabaseHandler.insert('parents', {'fullName': _parentName, 'email': _email, 'pin': pinCode})
         .then((_) => setState(() => waiting = false))

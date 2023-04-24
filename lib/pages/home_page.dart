@@ -60,14 +60,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool firstLoad = false;
   bool firstDigitvisibility = true;
   bool secondDigitvisibility = true;
-  late String selectedChild = 'Your child';
+  late String selectedChild = ' ';
   late String selectedChildId = '1';
   late String selectedChildBalance = '000';
 
-  late String parentName = 'Parent Name';
-  late String parentEmail = 'Parent Email';
+  late String parentName = ' ';
+  late String parentEmail = ' ';
   late String parentPin = '1234';
-  late String rfidRead = '';
+  late String rfidRead = ' ';
   late int firstDigit = 0;
   late int secondDigit = 0;
   late int thirdDigit = 0;
@@ -129,9 +129,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
     loadChild().then((value) {
       setState(() {
-        selectedChildId = value[0].id!.toString();
-        selectedChild = value[0].name;
-        selectedChildBalance = value[0].balance.toString();
+        if (value.isNotEmpty) {
+          selectedChildId = value[0].id!.toString();
+          selectedChild = value[0].name;
+          selectedChildBalance = value[0].balance.toString();
+        }
         setDigits(selectedChildBalance, '000');
       });
     }).then((value) async {
@@ -178,7 +180,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             SizedBox(height: height * .25),
             SizedBox(
                 height: height * .25,
-                child: Text(selectedChild[0].toUpperCase() + selectedChild.substring(1),
+                child: Text(selectedChild.isNotEmpty ? selectedChild[0].toUpperCase() + selectedChild.substring(1) : selectedChild,
                     style: TextStyle(
                         shadows: const <Shadow>[
                           Shadow(offset: Offset(5.0, 5.0), blurRadius: 0.0, color: Colors.white),
@@ -912,26 +914,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       switch (rfidRead) {
         case 'add':
           addTobalance();
-          addController.clear();
           break;
         case 'spend':
           subtractBalance();
-          spendController.clear();
           break;
         default:
           openTryAgain();
           break;
       }
+      spendController.clear();
+      addController.clear();
       noteController.clear();
     });
   }
 
-  void addTobalance() async {
+  addTobalance() async {
+    var value = addController.text;
+    var note = noteController.text;
     final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
-    var accumulatedBalance = int.parse(selectedChildBalance) + int.parse(addController.text != '' ? addController.text : '0');
+    var accumulatedBalance = int.parse(selectedChildBalance) + int.parse(value != '' ? value : '0');
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
-    childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
+    childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), note);
     dingPlayer.seek(const Duration(seconds: 0));
     coinDropPlayer.seek(const Duration(seconds: 0));
     dingPlayer.play();
@@ -951,19 +955,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
     });
 
-    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': addController.text, 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, addController.text, noteController.text, DateTime.now().toString());
+    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': value, 'note': note, 'createdAt': DateTime.now().toString()});
+    await AuthServices.sendAction(selectedChildId, value, note, DateTime.now().toString());
     await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
     addController.clear();
     noteController.clear();
   }
 
   void subtractBalance() async {
+    var value = spendController.text;
+    var note = noteController.text;
     final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
-    var accumulatedBalance = int.parse(selectedChildBalance) - int.parse(spendController.text != '' ? spendController.text : '0');
+    var accumulatedBalance = int.parse(selectedChildBalance) - int.parse(value != '' ? value : '0');
     if (accumulatedBalance > 999) accumulatedBalance = 999;
     if (accumulatedBalance < 0) accumulatedBalance = 0;
-    childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), noteController.text);
+    childrenProvider.updateChildNameByName(selectedChild, accumulatedBalance.toString(), note);
     dingPlayer.seek(const Duration(seconds: 0));
     jackPotPlayer.seek(const Duration(seconds: 0));
     dingPlayer.play();
@@ -983,8 +989,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         backgroundAudio.play();
       }
     });
-    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-${spendController.text}", 'note': noteController.text, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, addController.text, "-${spendController.text}", DateTime.now().toString());
+    await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-$value", 'note': note, 'createdAt': DateTime.now().toString()});
+    await AuthServices.sendAction(selectedChildId, "-$value", note, DateTime.now().toString());
     await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
 
     spendController.clear();
@@ -1361,9 +1367,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                 loadChild().then((value) {
                                   setState(() {
                                     selectedChildId = value[0].id!.toString();
-                                    selectedChild = value[0].name;
                                     selectedChildBalance = value[0].balance.toString();
+                                    selectedChild = value[0].name;
                                   });
+                                  setDigits(selectedChildBalance, '000');
                                 });
                                 Navigator.of(context).pop();
                               },

@@ -5,10 +5,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jooj_bank/models/database_handler.dart';
-import 'package:jooj_bank/models/models.dart';
 import 'package:jooj_bank/pages/home_page.dart';
 import 'package:jooj_bank/providers/children_provider.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/Services/auth_services.dart';
 import '/Services/globals.dart';
@@ -133,9 +133,9 @@ class _LoginPageState extends State<LoginPage> {
       await DatabaseHandler.deleteTable('parents');
       await DatabaseHandler.insert('parents', {'fullName': responseMap.values.first['name'], 'email': _email, 'pin': '1234'});
 
-      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
       await extractChildren();
-      await extractActions();
+      // await extractActions();
+      Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
     } on Exception {
       print('Time out connection 😑');
     }
@@ -143,35 +143,9 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => waiting = false);
   }
 
-  extractActions() async {
-    try {
-      http.Response? response = await AuthServices.showAction();
-      if (response.statusCode == 500 || response.statusCode == 404) {
-        setState(() => waiting = false);
-        errorSnackBar(context, 'Network connection error!');
-        return;
-      }
-      Map responseMap = jsonDecode(response.body);
-      if (response.statusCode != 200) {
-        setState(() => waiting = false);
-        return errorSnackBar(context, responseMap.values.first);
-      }
-      if (responseMap.values.last.isEmpty) return;
-      var actionsJson = jsonDecode(response.body)['actions'] as List;
-      List<BankAction> actions = actionsJson.map((e) => BankAction.fromJson(e)).toList();
-      print('parentName ${actions.length}' + actions.toString());
-
-      await DatabaseHandler.deleteTable('actions');
-      for (var i = 0; i < actions.length; i++) {
-        await DatabaseHandler.insert('actions', actions[i].toMap());
-      }
-      // await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => const NewHomePage()));
-    } on Exception {
-      print('Time out connection 😑');
-    }
-  }
-
   extractChildren() async {
+    final childrenProvider = Provider.of<ChildrenProvider>(context, listen: false);
+
     try {
       setState(() => waiting = true);
       http.Response? response = await AuthServices.showChild();
@@ -188,8 +162,22 @@ class _LoginPageState extends State<LoginPage> {
           var childrenJson = jsonDecode(response.body)['children'] as List;
           List<Child> children = childrenJson.map((e) => Child.fromJson(e)).toList();
           await DatabaseHandler.deleteTable('children');
+          await DatabaseHandler.deleteTable('actions');
+
           for (var i = 0; i < children.length; i++) {
-            await DatabaseHandler.insert('children', children[i].toMap());
+            var child = children[i].toMap();
+            var createdchild = await childrenProvider.insertDatabase(child['name'], child['balance'], '');
+            if (childrenJson[i]['actions_count'] != null && childrenJson[i]['actions_count'] != 0) {
+              for (var j = 0; j < childrenJson[i]['actions_count']; j++) {
+                await DatabaseHandler.insert('actions', {
+                  "childId": createdchild.id,
+                  "value": (childrenJson[i]['actions'][j]['value']),
+                  "note": childrenJson[i]['actions'][j]['note'],
+                  "createdAt": childrenJson[i]['actions'][j]['createdAt'],
+                });
+              }
+            }
+            // await DatabaseHandler.insert('children', children[i].toMap());
           }
         }
       } else {

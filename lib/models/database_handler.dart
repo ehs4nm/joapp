@@ -18,9 +18,9 @@ class DatabaseHandler {
       'CREATE TABLE IF NOT EXISTS parents (id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT NULL,email TEXT NULL, pin TEXT NULL );',
       'CREATE TABLE IF NOT EXISTS children (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NULL UNIQUE, balance INTEGER NULL, rfid TEXT NULL ); ',
       'CREATE TABLE IF NOT EXISTS actions (id INTEGER PRIMARY KEY AUTOINCREMENT, childId INTEGER NULL, value INTEGER NULL, note TEXT NULL, createdAt TEXT NULL); ',
-      'INSERT INTO parents (fullName, email, pin) VALUES("ehsan", "mohiti.ehsan@gmail.com","1234");',
-      'INSERT INTO children (name, balance, rfid) VALUES("sara", 0,"1234");',
-      'INSERT INTO actions (childId, value,note, createdAt) VALUES(1, 0,"note",datetime("now"));',
+      'INSERT INTO parents (fullName, email, pin) VALUES(" ", "mohiti.ehsan@gmail.com","1234");',
+      'INSERT INTO children (name, balance, rfid) VALUES(" ", 0,"1234");',
+      'INSERT INTO actions (childId, value, note, createdAt) VALUES(1, 0,"note",datetime("now"));',
     ];
 
     return openDatabase(
