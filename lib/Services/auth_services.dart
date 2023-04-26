@@ -45,11 +45,11 @@ class AuthServices {
     return response;
   }
 
-  static Future<http.Response> sendAction(String childId, String value, String note, String createdAt) async {
+  static Future<http.Response> sendAction(String childId, String childName, String value, String note, String createdAt) async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');
     print('\x1B[31m object \x1B[0m');
-    Map data = {"child_id": childId, "value": value, "note": note, "createdAt": createdAt, "token": token};
+    Map data = {"child_id": childId, "child_name": childName, "value": value, "note": note, "createdAt": createdAt, "token": token};
 
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}action');

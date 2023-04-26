@@ -956,7 +956,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
 
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': value, 'note': note, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, value, note, DateTime.now().toString());
+    await AuthServices.sendAction(selectedChildId, selectedChild, value, note, DateTime.now().toString());
     await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
     addController.clear();
     noteController.clear();
@@ -990,7 +990,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
     });
     await DatabaseHandler.insert('actions', {'childId': selectedChildId, 'value': "-$value", 'note': note, 'createdAt': DateTime.now().toString()});
-    await AuthServices.sendAction(selectedChildId, "-$value", note, DateTime.now().toString());
+    await AuthServices.sendAction(selectedChildId, selectedChild, "-$value", note, DateTime.now().toString());
     await AuthServices.updateChildBalance(selectedChild, accumulatedBalance.toString());
 
     spendController.clear();
