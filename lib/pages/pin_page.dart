@@ -186,7 +186,7 @@ class _PinPageState extends State<PinPage> {
                       },
                       onBiometric: () {
                         _authenticateWithBiometrics();
-                        print(pinCode);
+                        print('pinCode $pinCode');
                       },
                     ),
                   ),
@@ -233,7 +233,6 @@ class _PinPageState extends State<PinPage> {
   forgetPass() async {
     try {
       http.Response? response = await AuthServices.sendPin();
-      print('response $response');
       if (response.statusCode == 500 || response.statusCode == 404) {
         return errorSnackBar(context, 'Network connection error!');
       }

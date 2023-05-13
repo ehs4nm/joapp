@@ -914,17 +914,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       switch (rfidRead) {
         case 'add':
           addTobalance();
+          addController.clear();
           break;
         case 'spend':
           subtractBalance();
+          spendController.clear();
           break;
         default:
           openTryAgain();
           break;
       }
-      spendController.clear();
-      addController.clear();
-      noteController.clear();
+      // noteController.clear();
     });
   }
 
@@ -1273,8 +1273,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                                         width: width * .08,
                                                                         child: Padding(
                                                                             padding: const EdgeInsets.only(right: 5),
-                                                                            child:
-                                                                                Image.asset('assets/settings/${(snapshot.data![index]['value'] > 0) ? 'plus' : 'minus'}.png', height: height * .05))),
+                                                                            child: Image.asset(
+                                                                                'assets/settings/${((snapshot.data![index]['value'] is String ? 0 : snapshot.data![index]['value']) > 0) ? 'plus' : 'minus'}.png',
+                                                                                height: height * .05))),
                                                                     SizedBox(
                                                                         // height: height * .07,
                                                                         width: width * .15,
@@ -1284,7 +1285,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                                                               Image.asset('assets/settings/digit-box.png', height: height * .055),
                                                                               Padding(
                                                                                   padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-                                                                                  child: Text("\$${snapshot.data![index]['value'].abs().toString()}",
+                                                                                  child: Text("\$${(snapshot.data![index]['value'] is String ? 0 : snapshot.data![index]['value']).abs().toString()}",
                                                                                       style: const TextStyle(
                                                                                         fontFamily: 'waytosun',
                                                                                         fontSize: 13,

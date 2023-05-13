@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -125,9 +126,16 @@ class AuthServices {
   }
 
   static Future<http.Response> sendPin() async {
+    
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     String? token = localStorage.getString('token');
+
     String? pinCode = localStorage.getString('pinCode');
+    if( pinCode == null) {
+      String newPinCode = (Random().nextInt(9999 - 1000) + 1000).toString();
+      localStorage.setString('pinCode', newPinCode);
+      pinCode = newPinCode;
+    }
 
     Map data = {"pin": pinCode, "token": token};
 
@@ -212,8 +220,7 @@ class AuthServices {
 
     // var res = json.decode(response.body);
     token = localStorage.getString('token');
-    print('token    $token');
-
+    print('pinCode ${localStorage.getString('pinCode')}');
     return null;
   }
 

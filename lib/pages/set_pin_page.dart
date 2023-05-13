@@ -32,6 +32,7 @@ class _SetPinPageState extends State<SetPinPage> {
   void getPinCode() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     curentPinCode = prefs.getString('pinCode') ?? '1234';
+    print('currentpinCode $curentPinCode');
   }
 
   @override
@@ -195,7 +196,6 @@ class _SetPinPageState extends State<SetPinPage> {
   forgetPass() async {
     try {
       http.Response? response = await AuthServices.sendPin();
-      print('object $response');
       if (response.statusCode == 500 || response.statusCode == 404) {
         return errorSnackBar(context, 'Network connection error!');
       }
