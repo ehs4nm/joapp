@@ -15,7 +15,7 @@ class IntroApp extends StatefulWidget {
 }
 
 class _IntroAppState extends State<IntroApp> {
-  TextToSpeechService service = TextToSpeechService('AIzaSyDMgsjjPzHSkgaj3lPoY2LnHRgXMWe4TBY');
+  TextToSpeechService service = TextToSpeechService('');
   final voicePlayer = AudioPlayer();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
