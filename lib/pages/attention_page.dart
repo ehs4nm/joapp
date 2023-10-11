@@ -20,7 +20,7 @@ class AttentionPage extends StatefulWidget {
 }
 
 class _AttentionPageState extends State<AttentionPage> {
-  TextToSpeechService service = TextToSpeechService('AIzaSyDMgsjjPzHSkgaj3lPoY2LnHRgXMWe4TBY');
+  TextToSpeechService service = TextToSpeechService('');
   final voicePlayer = AudioPlayer();
   @override
   void initState() {
